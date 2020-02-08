@@ -32,12 +32,9 @@ import static us.ilite.common.types.drive.EDriveData.*;
 public class TestController extends BaseManualController {
 
     private ILog mLog = Logger.createLog(TestController.class);
-<<<<<<< HEAD
     private Double mLastTrackingType = 0.0; //null pointer exception here
     protected static final double DRIVER_SUB_WARP_AXIS_THRESHOLD = 0.5;
-=======
-    private Double mLastTrackingType = 0d;
->>>>>>> master
+    //private Double mLastTrackingType = 0d;
 
     private double mLimelightZoomThreshold = 7.0;
 
@@ -83,7 +80,6 @@ public class TestController extends BaseManualController {
         if(db.operatorinput.isSet(InputMap.OPERATOR.BEGIN_HANG)){
             Robot.DATA.hanger.set(EHangerModuleData.DESIRED_POSITION , 17.0);
         }
-<<<<<<< HEAD
 //        switch (mHangerState){
 //            case HANGING:
 //                Robot.DATA.hanger.set(EHangerModuleData.DESIRED_HANGER_POWER1 , 1.0);
@@ -92,12 +88,10 @@ public class TestController extends BaseManualController {
 //                Robot.DATA.hanger.set(EHangerModuleData.DESIRED_HANGER_POWER1 , 0.0);
 //                Robot.DATA.hanger.set(EHangerModuleData.DESIRED_HANGER_POWER2 , 0.0);
 //        }
-=======
         else {
             Robot.DATA.hanger.set(EHangerModuleData.DESIRED_POSITION, 0.0);
         }
 
->>>>>>> master
     }
 
     void updateFlywheel(double pNow) {
@@ -159,11 +153,8 @@ public class TestController extends BaseManualController {
 //            mAccelerator.set(ControlMode.PercentOutput, db.attackoperatorinput.get(ELogitechAttack3.TRIGGER));
 //        }
         mPreviousTime = pNow;
-<<<<<<< HEAD
     //    mLog.error("-------------------------------------------------------Flywheel Velocity: ", db.flywheel.get(EShooterSystemData.CURRENT_FLYWHEEL_VELOCITY));
-=======
 //        mLog.error("-------------------------------------------------------Flywheel Velocity: ", db.flywheel.get(EShooterSystemData.CURRENT_FLYWHEEL_VELOCITY));
->>>>>>> master
     }
 
     public void updateLimelightTargetLock() {
