@@ -97,6 +97,9 @@ public class DriveModule extends Module {
 	private final CANSparkMax mLeftFollower;
 	private final CANSparkMax mRightMaster;
 	private final CANSparkMax mRightFollower;
+
+	CANEncoder testencoder;
+
 	private final CANEncoder mLeftEncoder;
 	private final CANEncoder mRightEncoder;
 	private final CANPIDController mLeftCtrl;
@@ -129,6 +132,8 @@ public class DriveModule extends Module {
 		mLeftFollower.burnFlash();
 		mRightMaster.burnFlash();
 		mRightFollower.burnFlash();
+
+		testencoder = SparkMaxFactory.createDefaultSparkMax(9, CANSparkMaxLowLevel.MotorType.kBrushless).getEncoder();
 
 	}
 
@@ -189,7 +194,8 @@ public class DriveModule extends Module {
 //		mCurrentHeading = Robot.DATA.imu.get(EGyro.HEADING_DEGREES);
 //		Robot.DATA.imu.set(EGyro.YAW_DEGREES, mCurrentHeading - mPreviousHeading);
 
-
+		db.drivetrain.set(testencoderpos, testencoder.getPosition());
+		db.drivetrain.set(testencodervel, testencoder.getVelocity());
 	}
 
 	@Override

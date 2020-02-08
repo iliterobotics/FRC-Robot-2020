@@ -12,6 +12,8 @@ public enum EDriveData implements CodexOf<Double> {
     LEFT_VOLTAGE, RIGHT_VOLTAGE,
     IS_CURRENT_LIMITING,
 
+    testencoderpos, testencodervel,
+
 
     // Commanded Outputs
     LEFT_DEMAND, RIGHT_DEMAND,
