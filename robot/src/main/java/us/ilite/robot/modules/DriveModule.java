@@ -133,7 +133,7 @@ public class DriveModule extends Module {
 		mRightMaster.burnFlash();
 		mRightFollower.burnFlash();
 
-		mtemp = SparkMaxFactory.createDefaultSparkMax(9, CANSparkMaxLowLevel.MotorType.kBrushed);
+		mtemp = SparkMaxFactory.createDefaultSparkMax(9, CANSparkMaxLowLevel.MotorType.kBrushless);
 
 	}
 
@@ -194,8 +194,8 @@ public class DriveModule extends Module {
 //		mCurrentHeading = Robot.DATA.imu.get(EGyro.HEADING_DEGREES);
 //		Robot.DATA.imu.set(EGyro.YAW_DEGREES, mCurrentHeading - mPreviousHeading);
 
-		db.drivetrain.set(testencoderpos, mtemp.getAlternateEncoder().getPosition());
-		db.drivetrain.set(testencodervel, mtemp.getAlternateEncoder().getVelocity());
+		db.drivetrain.set(testencoderpos, mtemp.getAlternateEncoder(AlternateEncoderType.kQuadrature, 8192).getPosition());
+		db.drivetrain.set(testencodervel, mtemp.getAlternateEncoder(AlternateEncoderType.kQuadrature, 8192).getVelocity());
 	}
 
 	@Override
