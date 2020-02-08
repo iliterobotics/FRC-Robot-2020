@@ -158,6 +158,7 @@ public class Robot extends TimedRobot {
         mRunningModules.modeInit(TEST, mClock.getCurrentTime());
         mRunningModules.readInputs(mClock.getCurrentTime());
         mRunningModules.checkModule(mClock.getCurrentTime());
+        mRunningModules.addModule(mOI);
     }
 
     @Override

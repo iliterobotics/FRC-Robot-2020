@@ -21,7 +21,7 @@ import static us.ilite.common.types.drive.EDriveData.*;
 public class TestController extends AbstractController {
 
     private ILog mLog = Logger.createLog(TestController.class);
-    private Double mLastTrackingType;
+    private Double mLastTrackingType = 0.0; //null pointer exception here
     protected static final double DRIVER_SUB_WARP_AXIS_THRESHOLD = 0.5;
 
     private double mLimelightZoomThreshold = 7.0;
@@ -55,14 +55,14 @@ public class TestController extends AbstractController {
             Robot.DATA.hanger.set(EHangerModuleData.DESIRED_HANGER_POWER2 , 0.0);
 
         }
-        switch (mHangerState){
-            case HANGING:
-                Robot.DATA.hanger.set(EHangerModuleData.DESIRED_HANGER_POWER1 , 1.0);
-                Robot.DATA.hanger.set(EHangerModuleData.DESIRED_HANGER_POWER2 , 1.0);
-            case NOT_HANGING:
-                Robot.DATA.hanger.set(EHangerModuleData.DESIRED_HANGER_POWER1 , 0.0);
-                Robot.DATA.hanger.set(EHangerModuleData.DESIRED_HANGER_POWER2 , 0.0);
-        }
+//        switch (mHangerState){
+//            case HANGING:
+//                Robot.DATA.hanger.set(EHangerModuleData.DESIRED_HANGER_POWER1 , 1.0);
+//                Robot.DATA.hanger.set(EHangerModuleData.DESIRED_HANGER_POWER2 , 1.0);
+//            case NOT_HANGING:
+//                Robot.DATA.hanger.set(EHangerModuleData.DESIRED_HANGER_POWER1 , 0.0);
+//                Robot.DATA.hanger.set(EHangerModuleData.DESIRED_HANGER_POWER2 , 0.0);
+//        }
     }
 
     void updateFlywheel(double pNow) {
@@ -124,7 +124,7 @@ public class TestController extends AbstractController {
 //            mAccelerator.set(ControlMode.PercentOutput, db.attackoperatorinput.get(ELogitechAttack3.TRIGGER));
 //        }
         mPreviousTime = pNow;
-        mLog.error("-------------------------------------------------------Flywheel Velocity: ", db.flywheel.get(EShooterSystemData.CURRENT_FLYWHEEL_VELOCITY));
+    //    mLog.error("-------------------------------------------------------Flywheel Velocity: ", db.flywheel.get(EShooterSystemData.CURRENT_FLYWHEEL_VELOCITY));
     }
 
     public void updateLimelightTargetLock() {
@@ -155,7 +155,9 @@ public class TestController extends AbstractController {
                 Robot.DATA.limelight.set(ELimelightData.TARGET_ID, (double)Limelight.NONE.id());
 //            if(mTeleopCommandManager.isRunningCommands()) mTeleopCommandManager.stopRunningCommands(pNow);
         }
-        if ((Robot.DATA.limelight.get(ELimelightData.TARGET_ID.ordinal()) != (mLastTrackingType) )
+        if ((Robot.DATA.limelight
+                .get(ELimelightData.TARGET_ID.ordinal()) !=
+                (mLastTrackingType) )
                 && !(Robot.DATA.limelight.get(ELimelightData.TARGET_ID.ordinal()) == Limelight.NONE.id())) {
                 mLog.error("Requesting command start");
                 mLog.error("Stopping teleop command queue");
