@@ -108,7 +108,7 @@ public class OperatorInput extends Module {
         intakeInEntry.setDouble(Robot.DATA.operatorinput.get(ELogitech310.A_BTN));
 
         //ball count - check how many times the secondary beam is broken
-        if(Robot.DATA.powercell.get()
+        //if(Robot.DATA.powercell.get();
 
         if (mMode == EMatchMode.TEST) {
             for(RobotCodex c : Robot.DATA.mLoggedCodexes) {
