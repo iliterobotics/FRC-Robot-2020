@@ -56,7 +56,6 @@ public class PowerCellModule extends Module {
 
 
     //Constants
-
     public static double kIntakeTalonPower = 1d;
     public static double kForStopTalon = 0d;
     public static double kIntakePower = 1.0;
