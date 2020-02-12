@@ -51,16 +51,15 @@ public class ChrisCSVWritter {
 
     public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
         int testDurationInMins = 5;
-        
-        BufferedWriter bw = new BufferedWriter(new FileWriter(new File("output.txt"), true));
+
+
         ChrisCSVWritter aWriter = new ChrisCSVWritter((log) -> {
-            try {
+            try(BufferedWriter bw = new BufferedWriter(new FileWriter(new File("output.txt"), true));){
                 bw.write(log);
                 bw.newLine();
                 bw.flush();
             } catch (IOException e) {
                 e.printStackTrace();
-
             }
 
         });
