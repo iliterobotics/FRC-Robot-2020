@@ -13,8 +13,9 @@ import java.util.stream.IntStream;
 
 public class ChrisCSVWritter {
     private static final int NUM_THREADS = 10;
+    private static int THREAD_COUNTER = 1;
     private static final ScheduledExecutorService ses = Executors.newScheduledThreadPool(NUM_THREADS+1, (runnable -> {
-        return new Thread(runnable, "Worker threads");
+        return new Thread(runnable, "Worker threads-" + THREAD_COUNTER++);
     }));
 
     private static final ScheduledExecutorService mExService =
@@ -50,12 +51,13 @@ public class ChrisCSVWritter {
 
     public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
         int testDurationInMins = 5;
-        //Test 1: Use the BufferedWriter like we have in the robot code:
-        BufferedWriter bw = new BufferedWriter(new FileWriter(new File("output.txt")));
+        
+        BufferedWriter bw = new BufferedWriter(new FileWriter(new File("output.txt"), true));
         ChrisCSVWritter aWriter = new ChrisCSVWritter((log) -> {
             try {
-                bw.append(log);
+                bw.write(log);
                 bw.newLine();
+                bw.flush();
             } catch (IOException e) {
                 e.printStackTrace();
 
@@ -69,6 +71,7 @@ public class ChrisCSVWritter {
         }, testDurationInMins, TimeUnit.MINUTES).get();
 
         System.out.println("Stop!");
+        System.out.println("Say goodbye!");
         System.exit(0);
     }
 }
