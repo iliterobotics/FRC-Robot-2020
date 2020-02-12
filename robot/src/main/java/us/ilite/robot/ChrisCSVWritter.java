@@ -54,12 +54,22 @@ public class ChrisCSVWritter {
 
 
         ChrisCSVWritter aWriter = new ChrisCSVWritter((log) -> {
-            try(BufferedWriter bw = new BufferedWriter(new FileWriter(new File("output.txt"), true));){
+            BufferedWriter bw = null;
+            try{
+                bw = new BufferedWriter(new FileWriter(new File("output.txt"), true));
                 bw.write(log);
                 bw.newLine();
                 bw.flush();
             } catch (IOException e) {
                 e.printStackTrace();
+            } finally {
+                if(bw != null) {
+                    try {
+                        bw.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
 
         });
