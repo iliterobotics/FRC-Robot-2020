@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import us.ilite.common.types.ELimelightData;
 import us.ilite.common.types.EMatchMode;
+import us.ilite.common.types.EPowerCellData;
 import us.ilite.common.types.EShooterSystemData;
 import us.ilite.common.types.input.ELogitech310;
 import us.ilite.robot.Robot;
@@ -28,7 +29,8 @@ public class OperatorInput extends Module {
     private Joystick mOperatorJoystick;
     private ShuffleboardTab drivetrainTab;
     private NetworkTableEntry matchTimeEntry, driverThrottleEntry, limelightStatusEntry, driverHangBtnEntry,
-        operatorHangBtnEntry, intakeOutEntry, intakeInEntry, intakeRollersCurrentEntry, longShortMode;
+        operatorHangBtnEntry, intakeOutEntry, intakeInEntry, intakeRollersCurrentEntry, longShortMode,
+            serializerCurrentEntry;
     protected Codex<Double, ELogitech310> mDriverInputCodex, mOperatorInputCodex;
     private EMatchMode mMode = EMatchMode.DISABLED;
 
@@ -47,6 +49,7 @@ public class OperatorInput extends Module {
         intakeInEntry = drivetrainTab.add("Intake Out", 0).getEntry();
         intakeRollersCurrentEntry = drivetrainTab.add("Intake Current", 0).getEntry();
         longShortMode = drivetrainTab.add("Mode - Long/Short", " ").getEntry();
+        serializerCurrentEntry = drivetrainTab.add("Serializer Current", 0).getEntry();
     }
 
     @Override
@@ -106,9 +109,9 @@ public class OperatorInput extends Module {
         //intake in or out and current to tell what the operator's trying to do
         intakeOutEntry.setDouble(Robot.DATA.operatorinput.get(ELogitech310.X_BTN));
         intakeInEntry.setDouble(Robot.DATA.operatorinput.get(ELogitech310.A_BTN));
+        serializerCurrentEntry.setDouble(Robot.DATA.powercell.get(EPowerCellData.SERIALIZER_CURRENT));
 
-        //ball count - check how many times the secondary beam is broken
-        //if(Robot.DATA.powercell.get();
+        //ball count - check how many times the secondary beam is broken (Agrim working on logic in intake branch)
 
         if (mMode == EMatchMode.TEST) {
             for(RobotCodex c : Robot.DATA.mLoggedCodexes) {
