@@ -47,6 +47,7 @@ public class PowerCellModule extends Module {
     private DigitalBeamSensor mEntryBeam;
     private DigitalBeamSensor mSecondaryBeam;
     private DigitalBeamSensor mExitBeam;
+    private int mBallCount;
 
     private boolean allBeamsBroken;
     private int mEntryBeamNotBrokenCycles = 0;
@@ -56,7 +57,6 @@ public class PowerCellModule extends Module {
 
 
     //Constants
-
     public static double kIntakeTalonPower = 1d;
     public static double kForStopTalon = 0d;
     public static double kIntakePower = 1.0;
@@ -68,6 +68,7 @@ public class PowerCellModule extends Module {
     public static double kWarnCurrentLimitThreshold = 30; //Tune this later
     public static double kArmPowerEngaged = 1.0;
     public static double kArmPowerDisengaged = 0.0;
+    public static double kBallCountTime = 0.0;
 
     private static final int INTAKE_PIVOT_SLOT = 1;
     private static final ProfileGains mIntakePivotGains = new ProfileGains()
@@ -215,11 +216,15 @@ public class PowerCellModule extends Module {
             mExitBeamNotBrokenCycles = 0;
         }
 
-        db.powercell.set(ENTRY_BEAM, mEntryBeamNotBrokenCycles > 15);//mEntryBeamNotBrokenCycles > 15);
-        db.powercell.set(SECONDARY_BREAM, mSecondaryBeamNotBrokenCycles > 15);
+        db.powercell.set(ENTRY_BEAM, mEntryBeamNotBrokenCycles > 15);
+        db.powercell.set(SECONDARY_BEAM, mSecondaryBeamNotBrokenCycles > 15);
         db.powercell.set(EXIT_BEAM, mExitBeamNotBrokenCycles > 15);
 
+        // TODO Beam Breaker TBD
+        db.powercell.set(BALL_INTAKE_COUNT, mBallCount + (mEntryBeamNotBrokenCycles > 15 ? 1 : 0) );
+
         //TODO Determine Indexer State
+
     }
 
     @Override
@@ -249,21 +254,16 @@ public class PowerCellModule extends Module {
         SmartDashboard.putNumber("BeamCountBroken" , mBeamCountBroken);
         SmartDashboard.putNumber("BeamCountBrokenGoal" , mGoalBeamCountBroken);
 
-
 //        for (DigitalBeamSensor mDigitalBeamSensor : mDigitalBeamSensors) {
 //            if (mDigitalBeamSensor.isBroken()) mBeamCountBroken++;
 //        }
-        if ( mBeamCountBroken < mGoalBeamCountBroken) {
+
+        if ( mBeamCountBroken < mGoalBeamCountBroken ) {
             mConveyorMotorHorizontal.set( ControlMode.PercentOutput, db.powercell.get(EPowerCellData.DESIRED_H_VELOCITY) );
         } else {
             mConveyorMotorHorizontal.set( ControlMode.PercentOutput, 0.0 );
         }
-
         mGoalBeamCountBroken = mBeamCountBroken + 1;
     }
 
-
-    public void setIntakeState(EIntakeState pIntakeState){
-        mIntakeState = pIntakeState;
-    }
 }
