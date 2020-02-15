@@ -30,7 +30,7 @@ public class OperatorInput extends Module {
     private ShuffleboardTab drivetrainTab;
     private NetworkTableEntry matchTimeEntry, driverThrottleEntry, limelightStatusEntry, driverHangBtnEntry,
         operatorHangBtnEntry, intakeOutEntry, intakeInEntry, intakeRollersCurrentEntry, longShortMode,
-            serializerCurrentEntry;
+            serializerCurrentEntry, ballCountEntry;
     protected Codex<Double, ELogitech310> mDriverInputCodex, mOperatorInputCodex;
     private EMatchMode mMode = EMatchMode.DISABLED;
 
@@ -50,6 +50,7 @@ public class OperatorInput extends Module {
         intakeRollersCurrentEntry = drivetrainTab.add("Intake Current", 0).getEntry();
         longShortMode = drivetrainTab.add("Mode - Long/Short", " ").getEntry();
         serializerCurrentEntry = drivetrainTab.add("Serializer Current", 0).getEntry();
+        ballCountEntry = drivetrainTab.add("Ball Count", 0).getEntry();
     }
 
     @Override
@@ -79,7 +80,7 @@ public class OperatorInput extends Module {
         driverThrottleEntry.setDouble(Robot.DATA.driverinput.get(ELogitech310.LEFT_Y_AXIS));
 
         //display if limelight sees target and/or is locked
-        if(Robot.DATA.limelight.get(ELimelightData.TV) == 1)
+        if(Robot.DATA.limelight.isSet(ELimelightData.TV))
         {
             limelightStatusEntry.setString("Target in View");
         }
@@ -111,7 +112,8 @@ public class OperatorInput extends Module {
         intakeInEntry.setDouble(Robot.DATA.operatorinput.get(ELogitech310.A_BTN));
         serializerCurrentEntry.setDouble(Robot.DATA.powercell.get(EPowerCellData.SERIALIZER_CURRENT));
 
-        //ball count - check how many times the secondary beam is broken (Agrim working on logic in intake branch)
+        //ball count - check how many times the secondary beam is broken
+        ballCountEntry.setDouble(Robot.DATA.powercell.get(EPowerCellData.BALL_INTAKE_COUNT));
 
         if (mMode == EMatchMode.TEST) {
             for(RobotCodex c : Robot.DATA.mLoggedCodexes) {
