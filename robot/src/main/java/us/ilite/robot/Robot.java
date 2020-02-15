@@ -34,17 +34,17 @@ public class Robot extends TimedRobot {
     private static EMatchMode MODE = DISABLED;
     private ModuleList mRunningModules = new ModuleList();
     private final Settings mSettings = new Settings();
+    private HangerModule mHanger;
     private CSVLogger mCSVLogger = new CSVLogger();
-    private HangerModule mHanger = new HangerModule();
     private Timer initTimer = new Timer();
 
     private DriveModule mDrive;
-//    private Limelight mLimelight;
+    private Limelight mLimelight;
     private PowerCellModule mIntake;
-//    private RawLimelight mRawLimelight;
-//    private DJSpinnerModule mDJSpinnerModule;
+    private RawLimelight mRawLimelight;
+    private DJSpinnerModule mDJSpinnerModule;
     private SimulationModule mSimulation;
-//    private FlywheelModule mShooter;
+    private FlywheelModule mShooter;
 
 //    private PowerDistributionPanel pdp = new PowerDistributionPanel(Settings.Hardware.CAN.kPDP);
 
@@ -70,10 +70,11 @@ public class Robot extends TimedRobot {
         mDrive = new DriveModule();
 //        mLedControl = new LEDControl();
 //        mShooter = new FlywheelModule();
-        mIntake = new PowerCellModule();
-//        mLimelight = new Limelight();
+//        mIntake = new PowerCellModule();
+        mLimelight = new Limelight();
 //        mRawLimelight = new RawLimelight();
 //        mDJSpinnerModule = new DJSpinnerModule();
+//        mHanger = new HangerModule();
         if(IS_SIMULATED) {
             mSimulation = new SimulationModule();
         }
@@ -182,21 +183,15 @@ public class Robot extends TimedRobot {
 
         mRunningModules.clearModules();
         mRunningModules.addModule(mOI);
-//        mRunningModules.addModule(mLimelight);
+        mRunningModules.addModule(mLimelight);
 //        mRunningModules.addModule(mShooter);
 //        mRunningModules.addModule(mDrive);
-        mRunningModules.addModule(mHanger);
+        //mRunningModules.addModule(mHanger);
 //        mRunningModules.addModule(mIntake);
         //mRunningModules.addModule(mDJSpinnerModule);
         mRunningModules.modeInit(TEST, CLOCK.getCurrentTime());
         mRunningModules.readInputs(CLOCK.getCurrentTime());
         mRunningModules.checkModule(CLOCK.getCurrentTime());
-        mRunningModules.addModule(mOI);
-//        mRunningModules.addModule(mDrive);
-        mRunningModules.addModule(mDrive);
-//        mRunningModules.addModule(mHanger);
-        mRunningModules.addModule(mIntake);
-//        mRunningModules.addModule(mDJSpinnerModule);
         if(IS_SIMULATED) {
             mRunningModules.addModule(mSimulation);
         }
