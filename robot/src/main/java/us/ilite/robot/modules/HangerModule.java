@@ -1,5 +1,7 @@
 package us.ilite.robot.modules;
 
+import com.flybotix.hfr.util.log.ILog;
+import com.flybotix.hfr.util.log.Logger;
 import com.revrobotics.*;
 import us.ilite.common.Data;
 import us.ilite.common.config.Settings;
@@ -33,34 +35,43 @@ public class HangerModule extends Module {
     public static double kMaxElevatorDownAcceleration = 4000 * 1.5;
 
     private  double kHangerWarnCurrentLimitThreshold = 30;
-
+    private ILog mLogger = Logger.createLog(this.getClass());
     public HangerModule(){
-
+        mLogger.warn("CHRIS: Inside of hanger constructor");
         mHangerNeoOne = SparkMaxFactory.createDefaultSparkMax(Settings.Hardware.CAN.kHangerNeoID1 ,
                 CANSparkMaxLowLevel.MotorType.kBrushless);
+        mLogger.warn("CHRIS: Created NEO 1");
         mHangerNeoOne.setInverted(true);
+        mLogger.warn("CHRIS: Inverted");
 //        mHangerNeoTwo = SparkMaxFactory.createFollowerSparkMax(Settings.Hardware.CAN.kHangerNeoID2 , mHangerNeoOne,
 //                CANSparkMaxLowLevel.MotorType.kBrushless);
 
         mHangerPID = new CANPIDController(mHangerNeoOne);
+        mLogger.warn("Created CANPIDcontroller");
         mHangerPID.setP(P, UP_PID_SLOT_ID);
+        mLogger.warn("Setting P");
         mHangerPID.setI(I, UP_PID_SLOT_ID);
+        mLogger.warn("Setting I");
         mHangerPID.setD(D, UP_PID_SLOT_ID);
+        mLogger.warn("Setting D");
         mHangerPID.setSmartMotionMaxAccel(kMaxElevatorUpAcceleration, UP_PID_SLOT_ID);
+        mLogger.warn("Setting smart motion max accel");
         mHangerPID.setSmartMotionMaxVelocity(kMaxElevatorVelocity, UP_PID_SLOT_ID);
-
+        mLogger.warn("Setting smart motion max velocity");
 //        mHangerNeoTwo.follow(mHangerNeoOne , true);
 
         
 
         mHangerNeoOne.setIdleMode(CANSparkMax.IdleMode.kCoast);
-
+        mLogger.warn("Setting Idle Mode");
         mHangerNeoOne.burnFlash();
+        mLogger.warn("Setting Burn Flash");
 //        mHangerNeoTwo.burnFlash();
 
         mHangerEncoderOne = mHangerNeoOne.getEncoder();
-
+        mLogger.warn("Getting encoder");
         zeroTheEncoders();
+        mLogger.warn("Zeroed the encoders");
 
     }
     public enum EHangerState {
