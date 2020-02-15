@@ -4,6 +4,8 @@ import com.flybotix.hfr.util.log.ILog;
 import com.flybotix.hfr.util.log.Logger;
 import com.revrobotics.*;
 import static com.revrobotics.ControlType.*;
+
+import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import us.ilite.common.config.Settings;
@@ -100,7 +102,8 @@ public class DriveModule extends Module {
 
 
 	CANSparkMax temp;
-	CANEncoder testencoder;
+//	CANEncoder testencoder;
+	DutyCycleEncoder testencoder;
 
 	private final CANEncoder mLeftEncoder;
 	private final CANEncoder mRightEncoder;
@@ -135,9 +138,8 @@ public class DriveModule extends Module {
 		mRightMaster.burnFlash();
 		mRightFollower.burnFlash();
 
-
-
-		temp = SparkMaxFactory.createDefaultSparkMax(9, CANSparkMaxLowLevel.MotorType.kBrushless);
+		// TODO - Find correct id for encoder
+		testencoder = new DutyCycleEncoder(9);
 	}
 
 	@Override
@@ -197,8 +199,8 @@ public class DriveModule extends Module {
 //		mCurrentHeading = Robot.DATA.imu.get(EGyro.HEADING_DEGREES);
 //		Robot.DATA.imu.set(EGyro.YAW_DEGREES, mCurrentHeading - mPreviousHeading);
 
-		db.drivetrain.set(testencoderpos, temp.getAlternateEncoder(AlternateEncoderType.kQuadrature, 8192).getPosition());
-		db.drivetrain.set(testencodervel, temp.getAlternateEncoder(AlternateEncoderType.kQuadrature, 8192).getVelocity());
+		db.drivetrain.set(testencoderpos, testencoder.getDistance());
+		db.drivetrain.set(testencodervel, testencoder.getFrequency());
 	}
 
 	@Override
