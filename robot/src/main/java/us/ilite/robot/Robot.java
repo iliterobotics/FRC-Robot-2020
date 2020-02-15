@@ -32,6 +32,7 @@ public class Robot extends TimedRobot {
     public static final Clock CLOCK = (RobotBase.isReal() ? new Clock() : new Clock().simulated());
     public static final boolean IS_SIMULATED = RobotBase.isSimulation();
     private ModuleList mRunningModules = new ModuleList();
+    private final Settings mSettings = new Settings();
     /*
 
 
