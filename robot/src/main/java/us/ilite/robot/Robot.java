@@ -33,6 +33,11 @@ public class Robot extends TimedRobot {
     public static final boolean IS_SIMULATED = RobotBase.isSimulation();
     private ModuleList mRunningModules = new ModuleList();
     private final Settings mSettings = new Settings();
+
+    //Suspect 1:
+//    private HangerModule mHanger = new HangerModule(); //not on prototype
+    private final AbstractController mTeleopController = TeleopController.getInstance();
+    private final AbstractController mBaseAutonController = new BaseAutonController();
     /*
 
 
@@ -41,7 +46,7 @@ public class Robot extends TimedRobot {
 
 
     //    private CSVLogger mCSVLogger = new CSVLogger();
-        private HangerModule mHanger = new HangerModule();
+
         private Timer initTimer = new Timer();
 
         private DriveModule mDrive;
