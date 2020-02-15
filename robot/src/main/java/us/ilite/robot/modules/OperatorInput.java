@@ -29,7 +29,7 @@ public class OperatorInput extends Module {
     private Joystick mOperatorJoystick;
     private ShuffleboardTab drivetrainTab;
     private NetworkTableEntry matchTimeEntry, driverThrottleEntry, limelightStatusEntry, driverHangBtnEntry,
-        operatorHangBtnEntry, intakeOutEntry, intakeInEntry, intakeRollersCurrentEntry, longShortMode,
+        operatorHangBtnEntry, intakeOutEntry, intakeInEntry, longShortMode,
             serializerCurrentEntry, ballCountEntry;
     protected Codex<Double, ELogitech310> mDriverInputCodex, mOperatorInputCodex;
     private EMatchMode mMode = EMatchMode.DISABLED;
@@ -42,12 +42,11 @@ public class OperatorInput extends Module {
 
         matchTimeEntry = drivetrainTab.add("Match Time", 0).withSize(2, 1).withPosition(0, 0).getEntry();
         driverThrottleEntry = drivetrainTab.add("Driver Throttle", 0).withWidget(BuiltInWidgets.kGraph).getEntry();
-        limelightStatusEntry = drivetrainTab.add("Is Target Locked", 0).getEntry();
+        limelightStatusEntry = drivetrainTab.add("Is Target Locked", "No Visible Target").getEntry();
         driverHangBtnEntry = drivetrainTab.add("Hanger Lock - Driver", 0).getEntry();
         operatorHangBtnEntry = drivetrainTab.add("Hanger Lock - Operator", 0).getEntry();
         intakeOutEntry = drivetrainTab.add("Intake Out", 0).getEntry();
-        intakeInEntry = drivetrainTab.add("Intake Out", 0).getEntry();
-        intakeRollersCurrentEntry = drivetrainTab.add("Intake Current", 0).getEntry();
+        intakeInEntry = drivetrainTab.add("Intake In", 0).getEntry();
         longShortMode = drivetrainTab.add("Mode - Long/Short", " ").getEntry();
         serializerCurrentEntry = drivetrainTab.add("Serializer Current", 0).getEntry();
         ballCountEntry = drivetrainTab.add("Ball Count", 0).getEntry();
@@ -80,13 +79,13 @@ public class OperatorInput extends Module {
         driverThrottleEntry.setDouble(Robot.DATA.driverinput.get(ELogitech310.LEFT_Y_AXIS));
 
         //display if limelight sees target and/or is locked
-        if(Robot.DATA.limelight.isSet(ELimelightData.TV))
-        {
-            limelightStatusEntry.setString("Target in View");
-        }
-        else if(Robot.DATA.limelight.get(ELimelightData.TX) < 0.1)
+        if(Math.abs(Robot.DATA.limelight.get(ELimelightData.TX)) < 2.0)
         {
             limelightStatusEntry.setString("Target Locked");
+        }
+        else if(Robot.DATA.limelight.isSet(ELimelightData.TV))
+        {
+            limelightStatusEntry.setString("Target in View");
         }
         else
         {
