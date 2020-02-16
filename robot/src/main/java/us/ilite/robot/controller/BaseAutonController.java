@@ -1,5 +1,6 @@
 package us.ilite.robot.controller;
 
+import com.fasterxml.jackson.databind.ser.Serializers;
 import com.team2363.commands.HelixFollower;
 import com.team2363.commands.IliteHelixFollower;
 import com.team2363.controller.PIDController;
@@ -8,24 +9,25 @@ import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import javassist.tools.reflect.Reflection;
+import org.reflections.Reflections;
 import us.ilite.common.Distance;
+import us.ilite.common.config.Settings;
 import us.ilite.common.types.drive.EDriveData;
 import us.ilite.common.types.sensor.EGyro;
 import us.ilite.robot.Robot;
 import us.ilite.robot.auto.paths.BobUtils;
 import us.ilite.robot.modules.EDriveState;
 
-import java.util.Map;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
 
 public class BaseAutonController extends AbstractController {
 
     private Map<String, Path> mPaths = BobUtils.getAvailablePaths();
-    private ShuffleboardTab mAutonConfiguration = Shuffleboard.getTab("Auton Config");
-    private NetworkTableEntry mPathNumber = mAutonConfiguration.add("Path Number", 1)
-            .withWidget(BuiltInWidgets.kNumberSlider)
-            .withProperties(Map.of("min", 0, "max", 10, "block increment", 1))
-            .getEntry();
-    private NetworkTableEntry mPathDelay = mAutonConfiguration.add("Path Delay Seconds", 0).getEntry();
+    private ShuffleboardTab mAutonConfiguration;
+    private int mPathNumber;
+    private double mPathDelay;
 
     protected Path mActivePath = null;
     private final Distance mPathTotalDistance;
@@ -34,16 +36,24 @@ public class BaseAutonController extends AbstractController {
     private HelixFollowerImpl mPathFollower = null;
 
     public BaseAutonController() {
-        int pathIndex = 0;
+         mAutonConfiguration = Shuffleboard.getTab("Auton Config");
         mAutonConfiguration.addPersistent("Path Selection", "Select paths by clicking on the 'Path Number' slider dot and using arrow keys").withPosition(0, 1).withSize(4, 1);
+        mPathDelay = mAutonConfiguration.add("Path Delay Seconds", 0).getEntry().getDouble(0.0);
+        mPathNumber = mAutonConfiguration.add("Path Number", 1)
+                .withWidget(BuiltInWidgets.kNumberSlider)
+                .withProperties(Map.of("min", 0, "max", 10, "block increment", 1))
+                .getEntry()
+                .getNumber(0.0)
+                .intValue();
+        int pathIndex = 0;
         for (Map.Entry<String, Path> entry : mPaths.entrySet()) {
             mAutonConfiguration.addPersistent(entry.getKey(), pathIndex).withSize(1, 1).withPosition(pathIndex, 2);
             pathIndex++;
         }
 
         // Set active path equal to the path of the index selected in shuffleboard.
-        setActivePath(mActivePath = mPaths.get((String) mPaths.keySet().toArray()[mPathNumber.getNumber(0).intValue()]));
-        mDelayCycleCount = mPathDelay.getDouble(0.0) / .02;
+        setActivePath(mPaths.get((String) mPaths.keySet().toArray()[mPathNumber]));
+        mDelayCycleCount = mPathDelay / .02;
         mPathTotalDistance = BobUtils.getPathTotalDistance(mActivePath);
     }
 
@@ -68,15 +78,37 @@ public class BaseAutonController extends AbstractController {
 
     }
 
-    public Map<String, Path> getAvailablePaths(String baseName) {
-        Map<String, Path> mAvailablePaths = BobUtils.getAvailablePaths();
-        for (Map.Entry<String, Path> entry : mAvailablePaths.entrySet()) {
-            String key = entry.getKey();
-            if (!key.toLowerCase().contains(baseName.toLowerCase())) {
-                mAvailablePaths.remove(key);
-            }
-        }
-        return mAvailablePaths;
+//    public Set<Class<? extends BaseAutonController>> getAvailableControllerClasses() {
+//        Reflections reflections = new Reflections(Settings.CONTROLLER_PATH_PACKAGE);
+//        if (reflections == null) {
+//            return Collections.emptySet();
+//        } else {
+//            return reflections.getSubTypesOf(BaseAutonController.class);
+//        }
+//    }
+//
+//    public List<BaseAutonController> getAvailableAutonControllers() {
+//        Set<Class<? extends BaseAutonController>> allClasses = getAvailableControllerClasses();
+//        List<BaseAutonController> availableControllers = new ArrayList<>();
+//        for(Class<?> c : allClasses) {
+//
+//        }
+//        return availablePaths;
+//    }
+//
+//    public Map<String, Path> getAvailablePaths(String baseName) {
+//        Map<String, Path> mAvailablePaths = BobUtils.getAvailablePaths();
+//        for (Map.Entry<String, Path> entry : mAvailablePaths.entrySet()) {
+//            String key = entry.getKey();
+//            if (!key.toLowerCase().contains(baseName.toLowerCase())) {
+//                mAvailablePaths.remove(key);
+//            }
+//        }
+//        return mAvailablePaths;
+//    }
+
+    public static final void e() {
+        System.out.println("================================================");
     }
 
     protected void setActivePath(Path pPath) {

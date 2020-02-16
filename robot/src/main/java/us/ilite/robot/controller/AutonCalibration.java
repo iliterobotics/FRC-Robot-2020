@@ -24,6 +24,7 @@ public class AutonCalibration extends BaseAutonController {
     private final double mMaxAllowedPathTime;
 
     public AutonCalibration() {
+        super();
         db.registerAllWithShuffleboard();
 
         // Time to go through path plus any delay
@@ -65,9 +66,5 @@ public class AutonCalibration extends BaseAutonController {
 //                System.out.println("==== END AUTONOMOUS PATH DUE TO TIME OVERRUN ====");
 //                e();
 //            }
-    }
-
-    private static final void e() {
-        System.out.println("================================================");
     }
 }
