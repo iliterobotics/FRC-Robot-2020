@@ -16,16 +16,34 @@ import java.util.Map;
 
 public class AutonCalibration extends BaseAutonController {
 
-    private Path mPath = new Kate_test_path(); //T_LINE_10_FT(); //T_LINE_F10FT_L90DEG_F5FT_R5FT();
+//    private Path mPath = new Kate_test_path(); //T_LINE_10_FT(); //T_LINE_F10FT_L90DEG_F5FT_R5FT();
 //    private Path mPath = new T_90DEG_12FT(); //T_LINE_10_FT(); //T_LINE_F10FT_L90DEG_F5FT_R5FT();
 //    private Path mPath = new T_LINE_10_FT(); //T_LINE_F10FT_L90DEG_F5FT_R5FT();
 
+    private Map<String, Path> mKatePaths = getAvailablePaths("kate");
     private final Distance mPathTotalDistance;
-    private final double mMaxAllowedPathTime;
+    protected final double mMaxAllowedPathTime;
 
     public AutonCalibration() {
-        super();
+//        super();
         db.registerAllWithShuffleboard();
+
+        mAutonConfiguration = Shuffleboard.getTab("Auton Config");
+        mAutonConfiguration.addPersistent("Path Selection", "Select paths by clicking on the 'Path Number' slider dot and using arrow keys").withPosition(0, 1).withSize(4, 1);
+        mPathNumber = mAutonConfiguration.add("Path Number", 1)
+                .withWidget(BuiltInWidgets.kNumberSlider)
+                .withProperties(Map.of("min", 0, "max", 10, "block increment", 1))
+                .getEntry()
+                .getNumber(0.0)
+                .intValue();
+        int pathIndex = 0;
+        for (Map.Entry<String, Path> entry : mKatePaths.entrySet()) {
+            mAutonConfiguration.addPersistent(entry.getKey(), pathIndex).withSize(1, 1).withPosition(pathIndex, 2);
+            pathIndex++;
+        }
+
+        // Set active path equal to the path of the index selected in shuffleboard.
+        setActivePath(mKatePaths.get((String) mKatePaths.keySet().toArray()[mPathNumber]));
 
         // Time to go through path plus any delay
         mMaxAllowedPathTime = BobUtils.getPathTotalTime(mActivePath) + 0.1 + (mDelayCycleCount * .02);
@@ -33,7 +51,7 @@ public class AutonCalibration extends BaseAutonController {
 
         e();
         System.out.println("==== RUNNING AUTONOMOUS PATH ====");
-        System.out.println("Path: " + mPath.getClass().getSimpleName());
+        System.out.println("Path: " + mActivePath.getClass().getSimpleName());
         System.out.println("Time (s): " + mMaxAllowedPathTime);
         System.out.println("Dist (ft): " + mPathTotalDistance);
         e();

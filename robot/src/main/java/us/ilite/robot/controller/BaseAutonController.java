@@ -25,36 +25,19 @@ import java.util.*;
 public class BaseAutonController extends AbstractController {
 
     private Map<String, Path> mPaths = BobUtils.getAvailablePaths();
-    private ShuffleboardTab mAutonConfiguration;
-    private int mPathNumber;
-    private double mPathDelay;
+    protected ShuffleboardTab mAutonConfiguration;
 
     protected Path mActivePath = null;
-    private final Distance mPathTotalDistance;
+    protected int mPathNumber;
+    private double mPathDelay;
+
     protected double mPathStartTime = 0d;
     protected double mDelayCycleCount;
     private HelixFollowerImpl mPathFollower = null;
 
     public BaseAutonController() {
-         mAutonConfiguration = Shuffleboard.getTab("Auton Config");
-        mAutonConfiguration.addPersistent("Path Selection", "Select paths by clicking on the 'Path Number' slider dot and using arrow keys").withPosition(0, 1).withSize(4, 1);
         mPathDelay = mAutonConfiguration.add("Path Delay Seconds", 0).getEntry().getDouble(0.0);
-        mPathNumber = mAutonConfiguration.add("Path Number", 1)
-                .withWidget(BuiltInWidgets.kNumberSlider)
-                .withProperties(Map.of("min", 0, "max", 10, "block increment", 1))
-                .getEntry()
-                .getNumber(0.0)
-                .intValue();
-        int pathIndex = 0;
-        for (Map.Entry<String, Path> entry : mPaths.entrySet()) {
-            mAutonConfiguration.addPersistent(entry.getKey(), pathIndex).withSize(1, 1).withPosition(pathIndex, 2);
-            pathIndex++;
-        }
-
-        // Set active path equal to the path of the index selected in shuffleboard.
-        setActivePath(mPaths.get((String) mPaths.keySet().toArray()[mPathNumber]));
         mDelayCycleCount = mPathDelay / .02;
-        mPathTotalDistance = BobUtils.getPathTotalDistance(mActivePath);
     }
 
     @Override
@@ -96,16 +79,16 @@ public class BaseAutonController extends AbstractController {
 //        return availablePaths;
 //    }
 //
-//    public Map<String, Path> getAvailablePaths(String baseName) {
-//        Map<String, Path> mAvailablePaths = BobUtils.getAvailablePaths();
-//        for (Map.Entry<String, Path> entry : mAvailablePaths.entrySet()) {
-//            String key = entry.getKey();
-//            if (!key.toLowerCase().contains(baseName.toLowerCase())) {
-//                mAvailablePaths.remove(key);
-//            }
-//        }
-//        return mAvailablePaths;
-//    }
+    public Map<String, Path> getAvailablePaths(String baseName) {
+        Map<String, Path> mAvailablePaths = BobUtils.getAvailablePaths();
+        for (Map.Entry<String, Path> entry : mAvailablePaths.entrySet()) {
+            String key = entry.getKey();
+            if (!key.toLowerCase().contains(baseName.toLowerCase())) {
+                mAvailablePaths.remove(key);
+            }
+        }
+        return mAvailablePaths;
+    }
 
     public static final void e() {
         System.out.println("================================================");
