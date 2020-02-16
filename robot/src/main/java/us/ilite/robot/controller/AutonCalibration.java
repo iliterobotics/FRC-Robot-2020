@@ -34,7 +34,6 @@ public class AutonCalibration extends BaseAutonController {
 
     public AutonCalibration() {
         db.registerAllWithShuffleboard();
-        setActivePath(mPath);
         int pathIndex = 0;
         mAutonConfiguration.addPersistent("Path Selection", "Select paths by clicking on the 'Path Number' slider dot and using arrow keys").withPosition(0, 1).withSize(4, 1);
         for (Map.Entry<String, Path> entry : mPaths.entrySet()) {
@@ -43,7 +42,7 @@ public class AutonCalibration extends BaseAutonController {
         }
 
         // Set active path equal to the path of the index selected in shuffleboard.
-        mActivePath = mPaths.get((String) mPaths.keySet().toArray()[mPathNumber.getNumber(0).intValue()]);
+        setActivePath(mActivePath = mPaths.get((String) mPaths.keySet().toArray()[mPathNumber.getNumber(0).intValue()]));
         mDelayCycleCount = mPathDelay.getDouble(0.0) / .02;
         mPathTotalDistance = BobUtils.getPathTotalDistance(mActivePath);
 
