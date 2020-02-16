@@ -1,5 +1,8 @@
 package us.ilite.robot.hardware;
 
+import com.flybotix.hfr.util.log.ILog;
+import com.flybotix.hfr.util.log.Logger;
+import com.revrobotics.CANError;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
@@ -9,10 +12,10 @@ import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
  * This is a factory class for the Spark MAX motor controller that re-configures
  * all settings to our defaults. Note that settings must be explicitly flashed
  * to the Spark MAX in order to persisten across power cycles.
- * 
+ *
  */
 public class SparkMaxFactory {
-
+    private static final ILog mLogger = Logger.createLog(SparkMaxFactory.class);
     public static class Configuration {
         public int CAN_TIMEOUT = 100;
         public int CONTROL_FRAME_PERIOD = 10;
@@ -45,14 +48,22 @@ public class SparkMaxFactory {
 
     public static CANSparkMax createSparkMax(int pId, Configuration pConfiguration) {
         CANSparkMax spark = new CANSparkMax(pId, pConfiguration.MOTOR_TYPE);
-        spark.restoreFactoryDefaults();
-        spark.setCANTimeout(pConfiguration.CAN_TIMEOUT);
-        spark.setIdleMode(pConfiguration.IDLE_MODE);
-        spark.setPeriodicFramePeriod(PeriodicFrame.kStatus0, pConfiguration.STATUS_0_PERIOD_MS);
-        spark.setPeriodicFramePeriod(PeriodicFrame.kStatus1, pConfiguration.STATUS_1_PERIOD_MS);
-        spark.setPeriodicFramePeriod(PeriodicFrame.kStatus2, pConfiguration.STATUS_2_PERIOD_MS);
-        spark.setSecondaryCurrentLimit(pConfiguration.SECONDARY_CURRENT_LIMIT);
-        spark.setSmartCurrentLimit(pConfiguration.SMART_CURRENT_LIMIT);
+        CANError error = spark.restoreFactoryDefaults();
+
+        mLogger.warn("CHRIS: ID: " + pId +", got error state= " + error);
+        if(error == CANError.kOk) {
+            spark.setCANTimeout(pConfiguration.CAN_TIMEOUT);
+            spark.setIdleMode(pConfiguration.IDLE_MODE);
+            spark.setPeriodicFramePeriod(PeriodicFrame.kStatus0, pConfiguration.STATUS_0_PERIOD_MS);
+            spark.setPeriodicFramePeriod(PeriodicFrame.kStatus1, pConfiguration.STATUS_1_PERIOD_MS);
+            spark.setPeriodicFramePeriod(PeriodicFrame.kStatus2, pConfiguration.STATUS_2_PERIOD_MS);
+            spark.setSecondaryCurrentLimit(pConfiguration.SECONDARY_CURRENT_LIMIT);
+            spark.setSmartCurrentLimit(pConfiguration.SMART_CURRENT_LIMIT);
+        } else {
+            mLogger.warn("CHRIS: GOT AN ERROR: " + error);
+
+            return null;
+        }
 
         return spark;
     }
