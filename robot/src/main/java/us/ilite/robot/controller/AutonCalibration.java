@@ -20,34 +20,13 @@ public class AutonCalibration extends BaseAutonController {
 //    private Path mPath = new T_90DEG_12FT(); //T_LINE_10_FT(); //T_LINE_F10FT_L90DEG_F5FT_R5FT();
 //    private Path mPath = new T_LINE_10_FT(); //T_LINE_F10FT_L90DEG_F5FT_R5FT();
 
-    public enum DisplayPaths {
-        LOOP(new Loop()),
-        T_LINE_27_FT(new T_LINE_27_FT()),
-        OUR_TRENCH(new OurTrench()),
-        T_90DEG_12FT(new T_90DEG_12FT()),
-        T_LINE_10_FT(new T_LINE_10_FT()),
-        T_180DEG_24FT(new T_180DEG_24FT()),
-        YOINK(new Yoink()),
-        WONKY(new Wonky()),
-        SQUIGGLE(new Squiggle()),
-        T_LINE_F10FT_L90DEG_F5FT_R5FT(new T_LINE_F10FT_L90DEG_F5FT_R5FT()),
-        NONE(null);
-
-        public Path path;
-
-        DisplayPaths(Path path) {
-            this.path = path;
-        }
-    }
-
     private Map<String, Path> mPaths = BobUtils.getAvailablePaths();
     private ShuffleboardTab mAutonConfiguration = Shuffleboard.getTab("Auton Config");
     private NetworkTableEntry mPathNumber = mAutonConfiguration.add("Path Number", 1)
             .withWidget(BuiltInWidgets.kNumberSlider)
-            .withProperties(Map.of("min", 0, "max", 9, "block increment", 1))
+            .withProperties(Map.of("min", 0, "max", 10, "block increment", 1))
             .getEntry();
     private NetworkTableEntry mPathDelay = mAutonConfiguration.add("Path Delay Seconds", 0).getEntry();
-
 
     private final Distance mPathTotalDistance;
     private final double mMaxAllowedPathTime;
@@ -63,7 +42,8 @@ public class AutonCalibration extends BaseAutonController {
             pathIndex++;
         }
 
-        mActivePath = DisplayPaths.values()[mPathNumber.getNumber(0).intValue()].path;
+        // Set active path equal to the path of the index selected in shuffleboard.
+        mActivePath = mPaths.get((String) mPaths.keySet().toArray()[mPathNumber.getNumber(0).intValue()]);
         mDelayCycleCount = mPathDelay.getDouble(0.0) / .02;
         mPathTotalDistance = BobUtils.getPathTotalDistance(mActivePath);
 
