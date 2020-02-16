@@ -20,34 +20,15 @@ public class AutonCalibration extends BaseAutonController {
 //    private Path mPath = new T_90DEG_12FT(); //T_LINE_10_FT(); //T_LINE_F10FT_L90DEG_F5FT_R5FT();
 //    private Path mPath = new T_LINE_10_FT(); //T_LINE_F10FT_L90DEG_F5FT_R5FT();
 
-    private Map<String, Path> mPaths = BobUtils.getAvailablePaths();
-    private ShuffleboardTab mAutonConfiguration = Shuffleboard.getTab("Auton Config");
-    private NetworkTableEntry mPathNumber = mAutonConfiguration.add("Path Number", 1)
-            .withWidget(BuiltInWidgets.kNumberSlider)
-            .withProperties(Map.of("min", 0, "max", 10, "block increment", 1))
-            .getEntry();
-    private NetworkTableEntry mPathDelay = mAutonConfiguration.add("Path Delay Seconds", 0).getEntry();
-
     private final Distance mPathTotalDistance;
     private final double mMaxAllowedPathTime;
-    private double mDelayCycleCount;
 
     public AutonCalibration() {
         db.registerAllWithShuffleboard();
-        int pathIndex = 0;
-        mAutonConfiguration.addPersistent("Path Selection", "Select paths by clicking on the 'Path Number' slider dot and using arrow keys").withPosition(0, 1).withSize(4, 1);
-        for (Map.Entry<String, Path> entry : mPaths.entrySet()) {
-            mAutonConfiguration.addPersistent(entry.getKey(), pathIndex).withSize(1, 1).withPosition(pathIndex, 2);
-            pathIndex++;
-        }
-
-        // Set active path equal to the path of the index selected in shuffleboard.
-        setActivePath(mActivePath = mPaths.get((String) mPaths.keySet().toArray()[mPathNumber.getNumber(0).intValue()]));
-        mDelayCycleCount = mPathDelay.getDouble(0.0) / .02;
-        mPathTotalDistance = BobUtils.getPathTotalDistance(mActivePath);
 
         // Time to go through path plus any delay
         mMaxAllowedPathTime = BobUtils.getPathTotalTime(mActivePath) + 0.1 + (mDelayCycleCount * .02);
+        mPathTotalDistance = BobUtils.getPathTotalDistance(mActivePath);
 
         e();
         System.out.println("==== RUNNING AUTONOMOUS PATH ====");
@@ -55,16 +36,17 @@ public class AutonCalibration extends BaseAutonController {
         System.out.println("Time (s): " + mMaxAllowedPathTime);
         System.out.println("Dist (ft): " + mPathTotalDistance);
         e();
+
+
     }
 
     @Override
     protected void updateImpl(double pNow) {
-        if (mDelayCycleCount == 0) {
-            if (mPathStartTime == 0) {
-                mPathStartTime = pNow;
-            }
-            super.updateImpl(pNow);
-            
+        if (mPathStartTime == 0) {
+            mPathStartTime = pNow;
+        }
+        super.updateImpl(pNow);
+
 //          Add a time check to prevent errors when things go wrong
 //            if(mActivePath != null && pNow - mPathStartTime <= mMaxAllowedPathTime) {
 //                int index = BobUtils.getIndexForCumulativeTime(mActivePath, pNow, mPathStartTime);
@@ -83,9 +65,6 @@ public class AutonCalibration extends BaseAutonController {
 //                System.out.println("==== END AUTONOMOUS PATH DUE TO TIME OVERRUN ====");
 //                e();
 //            }
-        } else {
-            mDelayCycleCount--;
-        }
     }
 
     private static final void e() {
