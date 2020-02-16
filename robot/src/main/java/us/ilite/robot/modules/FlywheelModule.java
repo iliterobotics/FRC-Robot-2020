@@ -46,7 +46,7 @@ public class FlywheelModule extends Module {
     private TalonSRX mAccelerator;
 
     public FlywheelModule() {
-        mShooter = SparkMaxFactory.createDefaultSparkMax(Settings.Hardware.CAN.kShooterID, CANSparkMaxLowLevel.MotorType.kBrushless);
+        mShooter = SparkMaxFactory.createDefaultSparkMax("FlywheelModule::shooter",Settings.Hardware.CAN.kShooterID, CANSparkMaxLowLevel.MotorType.kBrushless);
         mAccelerator = new TalonSRX(Settings.Hardware.CAN.kAcceleratorID);
         mHoodAngler = new Servo(Settings.Hardware.DIO.kAnglerID);
         mTurret = new TalonSRX(Settings.Hardware.CAN.kTurretID);

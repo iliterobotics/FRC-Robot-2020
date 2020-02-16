@@ -129,8 +129,8 @@ public class DriveModule extends Module {
 	}
 
 	public DriveModule() {
-		mLeftMaster = SparkMaxFactory.createSparkMax(Settings.Hardware.CAN.kDriveLeftMaster, kDriveConfig);
-		mLeftFollower = SparkMaxFactory.createSparkMax(Settings.Hardware.CAN.kDriveLeftFollower, kDriveConfig);
+		mLeftMaster = SparkMaxFactory.createSparkMax("DriveModule::leftMaster", Settings.Hardware.CAN.kDriveLeftMaster, kDriveConfig);
+		mLeftFollower = SparkMaxFactory.createSparkMax("DriveModule::leftFollower",Settings.Hardware.CAN.kDriveLeftFollower, kDriveConfig);
 
 		CANEncoder leftEncoder = null;
 		CANPIDController leftCtrl = null;
@@ -143,8 +143,8 @@ public class DriveModule extends Module {
 		mLeftEncoder = Optional.ofNullable(leftEncoder);
 		mLeftCtrl = Optional.ofNullable(leftCtrl);
 
-		mRightMaster = SparkMaxFactory.createSparkMax(Settings.Hardware.CAN.kDriveRightMaster, kDriveConfig);
-		mRightFollower = SparkMaxFactory.createSparkMax(Settings.Hardware.CAN.kDriveRightFollower, kDriveConfig);
+		mRightMaster = SparkMaxFactory.createSparkMax("DriveModule::rightMaster",Settings.Hardware.CAN.kDriveRightMaster, kDriveConfig);
+		mRightFollower = SparkMaxFactory.createSparkMax("DriveModule::rightFollower",Settings.Hardware.CAN.kDriveRightFollower, kDriveConfig);
 
 		CANEncoder rightEncoder = null;
 		CANPIDController rightCtrl = null;

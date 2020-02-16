@@ -31,12 +31,12 @@ public class SparkMaxFactory {
     private static final Configuration kDefaultConfiguration = new Configuration();
     private static final Configuration kFollowConfiguration = new Configuration();
 
-    public static Optional<CANSparkMax> createDefaultSparkMax(int pId, MotorType pMotorType) {
-        return createSparkMax(pId, kDefaultConfiguration);
+    public static Optional<CANSparkMax> createDefaultSparkMax(String canName, int pId, MotorType pMotorType) {
+        return createSparkMax(canName, pId, kDefaultConfiguration);
     }
 
-    public static Optional<CANSparkMax> createFollowerSparkMax(int pId, CANSparkMax pMaster, MotorType pMotorType) {
-        Optional<CANSparkMax> spark = createSparkMax(pId, kFollowConfiguration);
+    public static Optional<CANSparkMax> createFollowerSparkMax(String canName, int pId, CANSparkMax pMaster, MotorType pMotorType) {
+        Optional<CANSparkMax> spark = createSparkMax(canName, pId, kFollowConfiguration);
         if(spark.isPresent()) {
             spark.get().follow(pMaster);
         }
@@ -44,12 +44,12 @@ public class SparkMaxFactory {
         return spark;
     }
 
-    public static Optional<CANSparkMax> createSparkMax(int pId, Configuration pConfiguration){
+    public static Optional<CANSparkMax> createSparkMax(String canName, int pId, Configuration pConfiguration){
 
         CANSparkMax spark = new CANSparkMax(pId, pConfiguration.MOTOR_TYPE);
 
         if(!canSparkMaxHasError(spark)) {
-            mLogger.info("Successfully connected to a can spark: " + pId);
+            mLogger.error("Successfully connected to CAN: " + canName+", on id: "+ pId);
             spark.restoreFactoryDefaults();
             spark.setCANTimeout(pConfiguration.CAN_TIMEOUT);
             spark.setIdleMode(pConfiguration.IDLE_MODE);
@@ -60,7 +60,7 @@ public class SparkMaxFactory {
             spark.setSmartCurrentLimit(pConfiguration.SMART_CURRENT_LIMIT);
         } else {
             spark = null;
-            mLogger.error("Failed to connect/load to can spark max: " + pId);
+            mLogger.error("Failed to connect to CAN: " + canName+", on id: "+pId);
         }
         return Optional.ofNullable(spark);
     }

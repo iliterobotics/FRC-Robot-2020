@@ -164,7 +164,7 @@ public class PowerCellModule extends Module {
         mArmState = EArmState.STOW;
         mIndexingState = EIndexingState.NOT_BROKEN;
 
-        mIntakeRoller = SparkMaxFactory.createDefaultSparkMax( Settings.Hardware.CAN.kMAXIntakeRollerId, CANSparkMaxLowLevel.MotorType.kBrushless );
+        mIntakeRoller = SparkMaxFactory.createDefaultSparkMax( "PowerCellModule::intakeRoller",Settings.Hardware.CAN.kMAXIntakeRollerId, CANSparkMaxLowLevel.MotorType.kBrushless );
 
         if(mIntakeRoller.isPresent()) {
             mIntakeRoller.get().setInverted(true);
@@ -176,7 +176,7 @@ public class PowerCellModule extends Module {
         mConveyorMotorVertical = TalonSRXFactory.createDefaultTalon( Settings.Hardware.CAN.kTalonVerticalID );
         mConveyorMotorVertical.setInverted(true);
 
-        mIntakePivot = SparkMaxFactory.createDefaultSparkMax( Settings.Hardware.CAN.kMAXIntakeArm, CANSparkMaxLowLevel.MotorType.kBrushless);
+        mIntakePivot = SparkMaxFactory.createDefaultSparkMax("PowerCellModule::intakePivot",Settings.Hardware.CAN.kMAXIntakeArm, CANSparkMaxLowLevel.MotorType.kBrushless);
 
         if(mIntakePivot.isPresent()) {
             mIntakePivot.get().setIdleMode(CANSparkMax.IdleMode.kCoast);

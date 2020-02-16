@@ -38,7 +38,7 @@ public class HangerModule extends Module {
 
     public HangerModule(){
 
-        mHangerNeoOne = SparkMaxFactory.createDefaultSparkMax(Settings.Hardware.CAN.kHangerNeoID1 ,
+        mHangerNeoOne = SparkMaxFactory.createDefaultSparkMax("HangerModule::hangerneoone",Settings.Hardware.CAN.kHangerNeoID1 ,
                 CANSparkMaxLowLevel.MotorType.kBrushless);
 
         CANPIDController hangerPID = null;
