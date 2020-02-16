@@ -1,12 +1,9 @@
 package us.ilite.robot.modules;
 
 import com.revrobotics.*;
-import us.ilite.common.Data;
 import us.ilite.common.config.Settings;
 import us.ilite.common.types.EHangerModuleData;
 import us.ilite.common.types.EMatchMode;
-import us.ilite.common.types.sensor.EPowerDistPanel;
-import us.ilite.robot.Robot;
 import us.ilite.robot.hardware.SparkMaxFactory;
 
 import java.util.Optional;
@@ -38,8 +35,8 @@ public class HangerModule extends Module {
 
     public HangerModule(){
 
-        mHangerNeoOne = SparkMaxFactory.createDefaultSparkMax("HangerModule::hangerneoone",Settings.Hardware.CAN.kHangerNeoID1 ,
-                CANSparkMaxLowLevel.MotorType.kBrushless);
+        mHangerNeoOne = SparkMaxFactory.createDefaultSparkMax("HangerModule::hangerneoone",Settings.Hardware.CAN.kHangerNeoID1
+        );
 
         CANPIDController hangerPID = null;
         CANEncoder hangerEncoder = null;

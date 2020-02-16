@@ -31,17 +31,8 @@ public class SparkMaxFactory {
     private static final Configuration kDefaultConfiguration = new Configuration();
     private static final Configuration kFollowConfiguration = new Configuration();
 
-    public static Optional<CANSparkMax> createDefaultSparkMax(String canName, int pId, MotorType pMotorType) {
+    public static Optional<CANSparkMax> createDefaultSparkMax(String canName, int pId) {
         return createSparkMax(canName, pId, kDefaultConfiguration);
-    }
-
-    public static Optional<CANSparkMax> createFollowerSparkMax(String canName, int pId, CANSparkMax pMaster, MotorType pMotorType) {
-        Optional<CANSparkMax> spark = createSparkMax(canName, pId, kFollowConfiguration);
-        if(spark.isPresent()) {
-            spark.get().follow(pMaster);
-        }
-
-        return spark;
     }
 
     public static Optional<CANSparkMax> createSparkMax(String canName, int pId, Configuration pConfiguration){

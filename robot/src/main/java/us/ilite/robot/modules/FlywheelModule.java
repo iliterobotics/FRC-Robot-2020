@@ -4,17 +4,14 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix.sensors.PigeonIMU;
 import com.revrobotics.CANSparkMax;
-import com.revrobotics.CANSparkMaxLowLevel;
 import edu.wpi.first.wpilibj.Servo;
 import us.ilite.common.Angle;
 import us.ilite.common.Distance;
 import us.ilite.common.config.Settings;
 import us.ilite.common.lib.control.PIDController;
 import us.ilite.common.lib.control.ProfileGains;
-import us.ilite.common.types.EPowerCellData;
 import us.ilite.common.types.EShooterSystemData;
 import us.ilite.common.types.EMatchMode;
-import us.ilite.common.types.input.ELogitech310;
 import us.ilite.robot.Robot;
 import us.ilite.robot.hardware.SparkMaxFactory;
 
@@ -46,7 +43,7 @@ public class FlywheelModule extends Module {
     private TalonSRX mAccelerator;
 
     public FlywheelModule() {
-        mShooter = SparkMaxFactory.createDefaultSparkMax("FlywheelModule::shooter",Settings.Hardware.CAN.kShooterID, CANSparkMaxLowLevel.MotorType.kBrushless);
+        mShooter = SparkMaxFactory.createDefaultSparkMax("FlywheelModule::shooter",Settings.Hardware.CAN.kShooterID);
         mAccelerator = new TalonSRX(Settings.Hardware.CAN.kAcceleratorID);
         mHoodAngler = new Servo(Settings.Hardware.DIO.kAnglerID);
         mTurret = new TalonSRX(Settings.Hardware.CAN.kTurretID);

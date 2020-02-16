@@ -12,7 +12,7 @@ import us.ilite.common.lib.control.ProfileGains;
 import us.ilite.common.types.EMatchMode;
 import us.ilite.common.types.EPowerCellData;
 import static us.ilite.common.types.EPowerCellData.*;
-import us.ilite.common.types.sensor.EPowerDistPanel;
+
 import us.ilite.robot.Robot;
 import us.ilite.robot.hardware.DigitalBeamSensor;
 import us.ilite.robot.hardware.HardwareUtils;
@@ -164,7 +164,7 @@ public class PowerCellModule extends Module {
         mArmState = EArmState.STOW;
         mIndexingState = EIndexingState.NOT_BROKEN;
 
-        mIntakeRoller = SparkMaxFactory.createDefaultSparkMax( "PowerCellModule::intakeRoller",Settings.Hardware.CAN.kMAXIntakeRollerId, CANSparkMaxLowLevel.MotorType.kBrushless );
+        mIntakeRoller = SparkMaxFactory.createDefaultSparkMax( "PowerCellModule::intakeRoller",Settings.Hardware.CAN.kMAXIntakeRollerId);
 
         if(mIntakeRoller.isPresent()) {
             mIntakeRoller.get().setInverted(true);
@@ -176,7 +176,7 @@ public class PowerCellModule extends Module {
         mConveyorMotorVertical = TalonSRXFactory.createDefaultTalon( Settings.Hardware.CAN.kTalonVerticalID );
         mConveyorMotorVertical.setInverted(true);
 
-        mIntakePivot = SparkMaxFactory.createDefaultSparkMax("PowerCellModule::intakePivot",Settings.Hardware.CAN.kMAXIntakeArm, CANSparkMaxLowLevel.MotorType.kBrushless);
+        mIntakePivot = SparkMaxFactory.createDefaultSparkMax("PowerCellModule::intakePivot",Settings.Hardware.CAN.kMAXIntakeArm);
 
         if(mIntakePivot.isPresent()) {
             mIntakePivot.get().setIdleMode(CANSparkMax.IdleMode.kCoast);
