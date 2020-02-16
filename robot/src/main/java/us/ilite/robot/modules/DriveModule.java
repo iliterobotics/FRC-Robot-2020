@@ -34,7 +34,8 @@ public class DriveModule extends Module {
 	// DO NOT CHANGE THE GEAR RATIO
 	public static double kGearboxRatio = (10.0 / 40.0) * (14.0 / 40.0);
 	// As of 2/9this is for omni wheels on a solid floor
-	public static double kWheelDiameterInches = 6.125;
+	//public static double kWheelDiameterInches = 6.125;
+	public static double kWheelDiameterInches = 5.875;
 	public static double kWheelCircumferenceFeet = kWheelDiameterInches*Math.PI/12.0;
 	// For position, getPosition() returns raw rotations - so convert that to feet
 	public static double kDriveNEOPositionFactor = kGearboxRatio * kWheelCircumferenceFeet;
@@ -78,7 +79,7 @@ public class DriveModule extends Module {
 			// Enforce a maximum allowed speed, system-wide. DO NOT undo kMaxAllowedVelocityMultiplier without checking with a mentor first.
 			.maxVelocity(kDriveTrainMaxVelocityRPM * Settings.Input.kMaxAllowedVelocityMultiplier)
 			// Divide by the simulated blue nitrile CoF 1.2, multiply by omni (on school floor) theoretical of 0.4
-			.maxAccel(kDriveMaxAccel_simulated.feet() / kDriveNEOVelocityFactor / 1.2 * 0.4)
+			.maxAccel(kDriveMaxAccel_simulated.feet() / kDriveNEOVelocityFactor / 1.2 * 0.8)
 			.slot(VELOCITY_PID_SLOT)
 			.velocityConversion(kDriveNEOVelocityFactor);
 	public static ProfileGains kTurnToProfileGains = new ProfileGains().f(0.085);
@@ -161,6 +162,7 @@ public class DriveModule extends Module {
 		mRightCtrl = Optional.ofNullable(rightCtrl);
 
 		mGyro = new Pigeon(Settings.Hardware.CAN.kPigeon);
+
 //		mGyro = new ADIS16470();
 
 		if(mLeftCtrl.isPresent() && mRightCtrl.isPresent()) {
@@ -209,10 +211,7 @@ public class DriveModule extends Module {
 		mHoldRightPositionPid.setSetpoint(0.0);
 		mStartHoldingPosition = false;
 
-		if(mLeftEncoder.isPresent() && mRightEncoder.isPresent()) {
-			mLeftEncoder.get().setPosition(0.0);
-			mRightEncoder.get().setPosition(0.0);
-		}
+		reset();
 
 		if(mLeftCtrl.isPresent() && mRightCtrl.isPresent()) {
 			HardwareUtils.setGains(mLeftCtrl.get(), vPID);
@@ -255,6 +254,9 @@ public class DriveModule extends Module {
 		double turn = db.drivetrain.get(DESIRED_TURN_PCT);
 		double throttle = db.drivetrain.get(DESIRED_THROTTLE_PCT);
 		switch (mode) {
+			case RESET:
+				reset();
+				break;
 //			case HOLD:
 //				if (!mStartHoldingPosition) {
 //					mHoldLeftPositionPid.setSetpoint(db.drivetrain.get(LEFT_POS_INCHES));
@@ -287,6 +289,7 @@ public class DriveModule extends Module {
 				}
 				break;
 			case PATH_FOLLOWING_BASIC:
+
 				if(mLeftCtrl.isPresent() && mRightCtrl.isPresent()) {
 					mLeftCtrl.get().setReference(db.drivetrain.get(L_PATH_FT_s) / kDriveNEOVelocityFactor, kVelocity, VELOCITY_PID_SLOT, 0);
 					mRightCtrl.get().setReference(db.drivetrain.get(R_PATH_FT_s) / kDriveNEOVelocityFactor, kVelocity, VELOCITY_PID_SLOT, 0);
@@ -300,6 +303,17 @@ public class DriveModule extends Module {
 						mRightMaster.get().set(throttle - turn);
 				}
 				break;
+		}
+	}
+
+	private void reset() {
+
+		if(mLeftEncoder.isPresent()) {
+			mLeftEncoder.get().setPosition(0.0);
+		}
+
+		if(mRightEncoder.isPresent()) {
+			mRightEncoder.get().setPosition(0.0);
 		}
 	}
 
