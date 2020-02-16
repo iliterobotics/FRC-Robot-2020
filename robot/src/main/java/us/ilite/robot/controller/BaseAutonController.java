@@ -10,6 +10,8 @@ import us.ilite.robot.Robot;
 import us.ilite.robot.auto.paths.BobUtils;
 import us.ilite.robot.modules.EDriveState;
 
+import java.util.Map;
+
 public class BaseAutonController extends AbstractController {
 
     protected Path mActivePath = null;
@@ -32,6 +34,17 @@ public class BaseAutonController extends AbstractController {
 
     }
 
+    public Map<String, Path> getAvailablePaths(String baseName) {
+        Map<String, Path> mAvailablePaths = BobUtils.getAvailablePaths();
+        for (Map.Entry<String, Path> entry : mAvailablePaths.entrySet()) {
+            String key = entry.getKey();
+            if (!key.toLowerCase().contains(baseName.toLowerCase())) {
+                mAvailablePaths.remove(key);
+            }
+        }
+        return mAvailablePaths;
+    }
+
     protected void setActivePath(Path pPath) {
         mActivePath = pPath;
         mPathFollower = new HelixFollowerImpl(mActivePath);
@@ -39,7 +52,9 @@ public class BaseAutonController extends AbstractController {
     }
 
     private class HelixFollowerImpl extends IliteHelixFollower {
-        /** Used as a multi-threaded caching buffer */
+        /**
+         * Used as a multi-threaded caching buffer
+         */
         private double mLastDistance = 0d;
         private double mLastHeading = 0d;
         private PIDController mDistanceController = new PIDController(
@@ -86,7 +101,7 @@ public class BaseAutonController extends AbstractController {
         @Override
         public double getCurrentHeading() {
             // There is a small chance this fires after data.reset() but before the modules' readInput has run
-            if(db.imu.isSet(EGyro.HEADING_DEGREES)) {
+            if (db.imu.isSet(EGyro.HEADING_DEGREES)) {
                 mLastHeading = db.imu.get(EGyro.HEADING_DEGREES) * Math.PI / 180.0;
             }
             return mLastHeading;
@@ -102,8 +117,7 @@ public class BaseAutonController extends AbstractController {
 
         protected void moveToNextSegment(double pNow) {
             currentSegment = BobUtils.getIndexForCumulativeTime(mActivePath, pNow, mPathStartTime);
-            if (currentSegment == -1)
-            {
+            if (currentSegment == -1) {
                 isFinished = true;
             }
         }
@@ -112,11 +126,9 @@ public class BaseAutonController extends AbstractController {
             super.execute();
             moveToNextSegment(pNow);
             super.calculateOutputs();
-            if(isFinished()) {
+            if (isFinished()) {
                 stopDrivetrain(0.0);
             }
         }
     }
-
-
 }
