@@ -9,16 +9,18 @@ import us.ilite.common.types.sensor.EPowerDistPanel;
 import us.ilite.robot.Robot;
 import us.ilite.robot.hardware.SparkMaxFactory;
 
+import java.util.Optional;
+
 public class HangerModule extends Module {
 
-    private CANSparkMax mHangerNeoOne;
+    private Optional<CANSparkMax> mHangerNeoOne;
     //TODO create sparkmax to follow to first
 //    private CANSparkMax mHangerNeoTwo;
 
     private EHangerState mHangerState;
-    private CANPIDController mHangerPID;
+    private Optional<CANPIDController> mHangerPID;
 
-    private CANEncoder mHangerEncoderOne;
+    private Optional<CANEncoder> mHangerEncoderOne;
 //    private CANEncoder mHangerEncoderTwo; O
 
     //PID Constants, to be used if needed
@@ -38,27 +40,25 @@ public class HangerModule extends Module {
 
         mHangerNeoOne = SparkMaxFactory.createDefaultSparkMax(Settings.Hardware.CAN.kHangerNeoID1 ,
                 CANSparkMaxLowLevel.MotorType.kBrushless);
-        mHangerNeoOne.setInverted(true);
-//        mHangerNeoTwo = SparkMaxFactory.createFollowerSparkMax(Settings.Hardware.CAN.kHangerNeoID2 , mHangerNeoOne,
-//                CANSparkMaxLowLevel.MotorType.kBrushless);
 
-        mHangerPID = new CANPIDController(mHangerNeoOne);
-        mHangerPID.setP(P, UP_PID_SLOT_ID);
-        mHangerPID.setI(I, UP_PID_SLOT_ID);
-        mHangerPID.setD(D, UP_PID_SLOT_ID);
-        mHangerPID.setSmartMotionMaxAccel(kMaxElevatorUpAcceleration, UP_PID_SLOT_ID);
-        mHangerPID.setSmartMotionMaxVelocity(kMaxElevatorVelocity, UP_PID_SLOT_ID);
+        CANPIDController hangerPID = null;
+        CANEncoder hangerEncoder = null;
+        if(mHangerNeoOne.isPresent()) {
+            mHangerNeoOne.get().setInverted(true);
+            hangerPID = new CANPIDController(mHangerNeoOne.get());
+            hangerPID.setP(P, UP_PID_SLOT_ID);
+            hangerPID.setI(I, UP_PID_SLOT_ID);
+            hangerPID.setD(D, UP_PID_SLOT_ID);
+            hangerPID.setSmartMotionMaxAccel(kMaxElevatorUpAcceleration, UP_PID_SLOT_ID);
+            hangerPID.setSmartMotionMaxVelocity(kMaxElevatorVelocity, UP_PID_SLOT_ID);
 
-//        mHangerNeoTwo.follow(mHangerNeoOne , true);
+            mHangerNeoOne.get().setIdleMode(CANSparkMax.IdleMode.kCoast);
+            mHangerNeoOne.get().burnFlash();
+            hangerEncoder = mHangerNeoOne.get().getEncoder();
+        }
 
-        
-
-        mHangerNeoOne.setIdleMode(CANSparkMax.IdleMode.kCoast);
-
-        mHangerNeoOne.burnFlash();
-//        mHangerNeoTwo.burnFlash();
-
-        mHangerEncoderOne = mHangerNeoOne.getEncoder();
+        mHangerPID = Optional.ofNullable(hangerPID);
+        mHangerEncoderOne = Optional.ofNullable(hangerEncoder);
 
         zeroTheEncoders();
 
@@ -83,9 +83,11 @@ public class HangerModule extends Module {
 //        Robot.DATA.hanger.set(EHangerModuleData.DESIRED_HANGER_POWER1 , (double) returnHangerState().ordinal() );
 //        Robot.DATA.hanger.set(EHangerModuleData.DESIRED_HANGER_POWER2 , (double) returnHangerState().ordinal() );
 
-        db.hanger.set(EHangerModuleData.CURRENT_HANGER_VELOCITY , mHangerEncoderOne.getVelocity());
-        db.hanger.set(EHangerModuleData.CURRENT_POSITION, mHangerEncoderOne.getPosition());
-        db.hanger.set(EHangerModuleData.OUTPUT_CURRENT, mHangerNeoOne.getOutputCurrent());
+        if(mHangerEncoderOne.isPresent() && mHangerEncoderOne.isPresent() && mHangerNeoOne.isPresent()) {
+            db.hanger.set(EHangerModuleData.CURRENT_HANGER_VELOCITY, mHangerEncoderOne.get().getVelocity());
+            db.hanger.set(EHangerModuleData.CURRENT_POSITION, mHangerEncoderOne.get().getPosition());
+            db.hanger.set(EHangerModuleData.OUTPUT_CURRENT, mHangerNeoOne.get().getOutputCurrent());
+        }
     }
 
     @Override
@@ -96,7 +98,10 @@ public class HangerModule extends Module {
 
     @Override
     public void setOutputs(double pNow) {
-        mHangerPID.setReference(db.hanger.get(EHangerModuleData.DESIRED_POSITION), ControlType.kSmartMotion, UP_PID_SLOT_ID);
+
+        if(mHangerPID.isPresent()) {
+            mHangerPID.get().setReference(db.hanger.get(EHangerModuleData.DESIRED_POSITION), ControlType.kSmartMotion, UP_PID_SLOT_ID);
+        }
 //        mHangerNeoOne.set(Robot.DATA.hanger.get(EHangerModuleData.CURRENT_HANGER_VELOCITY));
 
     }
@@ -110,11 +115,18 @@ public class HangerModule extends Module {
         mHangerState = desiredState;
     }
     public boolean isCurrentLimiting(){
-        return mHangerNeoOne.getOutputCurrent() >= kHangerWarnCurrentLimitThreshold;
+        boolean isCurrentLimiting = true; //TODO: Need to decide what the default should be. I would think true to prevent
+        //orperations from working
+        if(mHangerNeoOne.isPresent()) {
+            isCurrentLimiting = mHangerNeoOne.get().getOutputCurrent() >= kHangerWarnCurrentLimitThreshold;
+        }
+        return isCurrentLimiting;
     }
 
     public void zeroTheEncoders(){
-        mHangerEncoderOne.setPosition(0);
+        if(mHangerNeoOne.isPresent()) {
+            mHangerEncoderOne.get().setPosition(0);
+        }
     }
 
 //    public boolean isAtPosition() {

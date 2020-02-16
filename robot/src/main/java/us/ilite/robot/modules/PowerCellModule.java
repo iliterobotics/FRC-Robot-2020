@@ -21,6 +21,7 @@ import us.ilite.robot.hardware.TalonSRXFactory;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 public class PowerCellModule extends Module {
 
@@ -34,11 +35,11 @@ public class PowerCellModule extends Module {
     private TalonSRX mConveyorMotorVertical;
 
     //Arm
-    private CANSparkMax mIntakePivot;
-    private CANSparkMax mIntakeRoller;
-    private CANPIDController mIntakePivotCtrl;
-    private CANEncoder mIntakePivotEncoder;
-    private CANEncoder mIntakeRollerEncoder;
+    private final Optional<CANSparkMax> mIntakePivot;
+    private final Optional<CANSparkMax> mIntakeRoller;
+    private final Optional<CANPIDController> mIntakePivotCtrl;
+    private final Optional<CANEncoder> mIntakePivotEncoder;
+    private final Optional<CANEncoder> mIntakeRollerEncoder;
 
 //    Beam Breakers
     private DigitalBeamSensor mEntryBeam;
@@ -164,38 +165,67 @@ public class PowerCellModule extends Module {
         mIndexingState = EIndexingState.NOT_BROKEN;
 
         mIntakeRoller = SparkMaxFactory.createDefaultSparkMax( Settings.Hardware.CAN.kMAXIntakeRollerId, CANSparkMaxLowLevel.MotorType.kBrushless );
-        mIntakeRoller.setInverted(true);
-        mIntakeRoller.setIdleMode(CANSparkMax.IdleMode.kCoast);
-        mIntakeRoller.setSmartCurrentLimit(15);
+
+        if(mIntakeRoller.isPresent()) {
+            mIntakeRoller.get().setInverted(true);
+            mIntakeRoller.get().setIdleMode(CANSparkMax.IdleMode.kCoast);
+            mIntakeRoller.get().setSmartCurrentLimit(15);
+        }
 
         mConveyorMotorHorizontal = TalonSRXFactory.createDefaultTalon( Settings.Hardware.CAN.kTalonPowerCellSerializer);
         mConveyorMotorVertical = TalonSRXFactory.createDefaultTalon( Settings.Hardware.CAN.kTalonVerticalID );
         mConveyorMotorVertical.setInverted(true);
 
         mIntakePivot = SparkMaxFactory.createDefaultSparkMax( Settings.Hardware.CAN.kMAXIntakeArm, CANSparkMaxLowLevel.MotorType.kBrushless);
-        mIntakePivot.setIdleMode(CANSparkMax.IdleMode.kCoast);
-        mIntakePivot.setSecondaryCurrentLimit(35);
+
+        if(mIntakePivot.isPresent()) {
+            mIntakePivot.get().setIdleMode(CANSparkMax.IdleMode.kCoast);
+            mIntakePivot.get().setSecondaryCurrentLimit(35);
+        }
 
         mEntryBeam = new DigitalBeamSensor( Settings.Hardware.DIO.kEntryBeamChannel);
         mSecondaryBeam = new DigitalBeamSensor( Settings.Hardware.DIO.kSecondaryBeamChannel);
         mExitBeam = new DigitalBeamSensor( Settings.Hardware.DIO.kExitBeamChannel);
         mDigitalBeamSensors = new DigitalBeamSensor[]{mEntryBeam, mSecondaryBeam, mExitBeam};
 
-        mIntakePivotEncoder = new CANEncoder(mIntakePivot);
-        mIntakeRollerEncoder = mIntakeRoller.getEncoder();
+        CANEncoder intakePivotEncoder = null;
+        CANEncoder intakeRollerEncoder = null;
+        CANPIDController intakePivotCtrl = null;
+        if(mIntakePivot.isPresent()) {
+            intakePivotEncoder = new CANEncoder(mIntakePivot.get());
+            intakePivotCtrl = mIntakePivot.get().getPIDController();
+        }
 
-        mIntakePivotCtrl = mIntakePivot.getPIDController();
-        HardwareUtils.setGains(mIntakePivotCtrl, mIntakePivotDownGains);
+        if(mIntakeRoller.isPresent()) {
+            intakeRollerEncoder = new CANEncoder(mIntakeRoller.get());
+        }
+        mIntakePivotEncoder = Optional.ofNullable(intakePivotEncoder);
+        mIntakeRollerEncoder = Optional.ofNullable(intakeRollerEncoder);
+
+        mIntakePivotCtrl = Optional.ofNullable(intakePivotCtrl);
+
+        if(mIntakePivotCtrl.isPresent()) {
+            HardwareUtils.setGains(mIntakePivotCtrl.get(), mIntakePivotDownGains);
+        }
     }
 
     @Override
     public void modeInit(EMatchMode pMode, double pNow) {
-        HardwareUtils.setGains(mIntakePivotCtrl, mIntakePivotUpGains);
+
+        if(mIntakePivotCtrl.isPresent()) {
+            HardwareUtils.setGains(mIntakePivotCtrl.get(), mIntakePivotUpGains);
 //        HardwareUtils.setGains(mIntakePivotEncoder, mIntakePivotUpGains);
-        HardwareUtils.setGains(mIntakePivotCtrl, mIntakePivotDownGains);
+            HardwareUtils.setGains(mIntakePivotCtrl.get(), mIntakePivotDownGains);
+        }
 //        HardwareUtils.setGains(mIntakePivotEncoder, mIntakePivotDownGains);
-        mIntakePivotEncoder.setPosition(0.0);
-        mIntakePivotCtrl.setOutputRange(0.0, 95.0);
+
+        if(mIntakePivotEncoder.isPresent()) {
+            mIntakePivotEncoder.get().setPosition(0.0);
+        }
+
+        if(mIntakePivotCtrl.isPresent()) {
+            mIntakePivotCtrl.get().setOutputRange(0.0, 95.0);
+        }
         SmartDashboard.putNumber("Rotation Conversion (deg)", mIntakePivotDownGains.POSITION_CONVERSION_FACTOR);
         SmartDashboard.putNumber("Max Rotation Speed (deg/s)", kMaxIntakePivotVelocityDeg_s * kPivotVelocityConversion);
     }
@@ -206,12 +236,24 @@ public class PowerCellModule extends Module {
         Object[] brokenArray = Arrays.stream(mDigitalBeamSensors).map(e -> !e.isBroken()).toArray();
 
         db.powercell.set(CURRENT_AMOUNT_OF_SENSORS_BROKEN, List.of(mDigitalBeamSensors).stream().filter(e -> !e.isBroken()).count());
-        db.powercell.set(INTAKE_ROLLER_CURRENT, mIntakeRoller.getOutputCurrent());
-        db.powercell.set(CURRENT_INTAKE_VELOCITY_FT_S, mIntakeRollerEncoder.getVelocity());
-        db.powercell.set(CURRENT_ARM_ANGLE , mIntakePivotEncoder.getPosition() * kPivotConversion);
+
+        if(mIntakeRoller.isPresent()) {
+            db.powercell.set(INTAKE_ROLLER_CURRENT, mIntakeRoller.get().getOutputCurrent());
+        }
+
+        if(mIntakeRollerEncoder.isPresent()) {
+            db.powercell.set(CURRENT_INTAKE_VELOCITY_FT_S, mIntakeRollerEncoder.get().getVelocity());
+        }
+
+        if(mIntakePivotEncoder.isPresent()) {
+            db.powercell.set(CURRENT_ARM_ANGLE, mIntakePivotEncoder.get().getPosition() * kPivotConversion);
+        }
         db.powercell.set(SERIALIZER_CURRENT, mConveyorMotorHorizontal.getStatorCurrent());
         db.powercell.set(VERTICAL_CURRENT, mConveyorMotorVertical.getStatorCurrent());
-        db.powercell.set(INTAKE_PIVOT_CURRENT, mIntakePivot.getOutputCurrent());
+
+        if(mIntakePivot.isPresent()) {
+            db.powercell.set(INTAKE_PIVOT_CURRENT, mIntakePivot.get().getOutputCurrent());
+        }
 
         if(db.powercell.get(DESIRED_AMOUNT_OF_SENSORS_BROKEN) >= 3.0){
             db.powercell.set(DESIRED_AMOUNT_OF_SENSORS_BROKEN , (db.powercell.get(CURRENT_AMOUNT_OF_SENSORS_BROKEN )) + 1)  ;
@@ -258,19 +300,26 @@ public class PowerCellModule extends Module {
         mConveyorMotorHorizontal.set(ControlMode.PercentOutput, db.powercell.get(DESIRED_H_VELOCITY));
         mConveyorMotorVertical.set(ControlMode.PercentOutput, db.powercell.get(DESIRED_V_VELOCITY));
         if(db.powercell.isSet(INTAKE_STATE)) {
-            mIntakeRoller.set(db.powercell.get(DESIRED_INTAKE_VELOCITY_FT_S));
+
+            if(mIntakeRoller.isPresent()) {
+                mIntakeRoller.get().set(db.powercell.get(DESIRED_INTAKE_VELOCITY_FT_S));
+            }
             EArmState state = db.powercell.get(INTAKE_STATE, EArmState.class);
             switch(state) {
                 case OUT:
                 case STOW:
-                    mIntakePivotCtrl.setReference(state.angle/kPivotConversion, ControlType.kSmartMotion, INTAKE_PIVOT_DOWN_SLOT, 0.01);
+                    if(mIntakePivotCtrl.isPresent()) {
+                        mIntakePivotCtrl.get().setReference(state.angle / kPivotConversion, ControlType.kSmartMotion, INTAKE_PIVOT_DOWN_SLOT, 0.01);
+                    }
                     break;
                 default:
-                    mIntakePivot.set(0.0);
+                    if(mIntakePivot.isPresent()) {
+                        mIntakePivot.get().set(0.0);
+                    }
             }
             SmartDashboard.putNumber("TARGET ANGLE (deg)", state.angle);
-        } else {
-            mIntakePivot.set(0.0);
+        } else if(mIntakePivot.isPresent()){
+            mIntakePivot.get().set(0.0);
         }
     }
 

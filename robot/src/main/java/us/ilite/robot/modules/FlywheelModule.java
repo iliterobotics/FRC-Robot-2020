@@ -18,6 +18,8 @@ import us.ilite.common.types.input.ELogitech310;
 import us.ilite.robot.Robot;
 import us.ilite.robot.hardware.SparkMaxFactory;
 
+import java.util.Optional;
+
 
 public class FlywheelModule extends Module {
     public static int kMaxTalonVelocity = 1500; // probably needs readjustment
@@ -38,7 +40,7 @@ public class FlywheelModule extends Module {
     private FlywheelModule.EHoodState mHoodState = FlywheelModule.EHoodState.STATIONARY; // TEST WHEN LIMELIGHT REMOUNTED
 
     public static final double kBaseHoodAngle = 60;
-    public CANSparkMax mShooter;
+    public Optional<CANSparkMax> mShooter;
     private Servo mHoodAngler;
     private TalonSRX mTurret;
     private TalonSRX mAccelerator;
@@ -82,7 +84,13 @@ public class FlywheelModule extends Module {
     }
 
     public boolean isMaxVelocity() {
-        return mShooter.getEncoder().getVelocity() >= kAcceleratorThreshold;
+        boolean isMaxVelocity = true; //Need to decide what the default should be.
+
+        if(mShooter.isPresent()) {
+            isMaxVelocity = mShooter.get().getEncoder().getVelocity() >= kAcceleratorThreshold;
+        }
+
+        return isMaxVelocity;
     }
 
     @Override
@@ -93,7 +101,10 @@ public class FlywheelModule extends Module {
     @Override
     public void readInputs(double pNow) {
         Robot.DATA.flywheel.set(EShooterSystemData.TARGET_FLYWHEEL_VELOCITY, 0.0);
-        Robot.DATA.flywheel.set(EShooterSystemData.CURRENT_FLYWHEEL_VELOCITY, mShooter.getEncoder().getVelocity());
+
+        if(mShooter.isPresent()) {
+            Robot.DATA.flywheel.set(EShooterSystemData.CURRENT_FLYWHEEL_VELOCITY, mShooter.get().getEncoder().getVelocity());
+        }
 
         //TODO - move these lines to the controller
 //        Robot.DATA.flywheel.set(EShooterSystemData.TARGET_LIMELIGHT_TARGET, (double) mTrackingType.ordinal());
@@ -126,7 +137,10 @@ public class FlywheelModule extends Module {
             mAccelerator.set(ControlMode.PercentOutput, 0.0);
         }
         mHoodAngler.setAngle(Robot.DATA.flywheel.get(EShooterSystemData.TARGET_HOOD_ANGLE));
-        mShooter.set(Robot.DATA.flywheel.get(EShooterSystemData.TARGET_FLYWHEEL_VELOCITY));
+
+        if(mShooter.isPresent()) {
+            mShooter.get().set(Robot.DATA.flywheel.get(EShooterSystemData.TARGET_FLYWHEEL_VELOCITY));
+        }
         mTurret.set(ControlMode.Velocity, Robot.DATA.flywheel.get(EShooterSystemData.TARGET_TURRET_VELOCITY));
     }
 

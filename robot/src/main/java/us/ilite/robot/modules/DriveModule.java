@@ -21,6 +21,8 @@ import static us.ilite.common.types.sensor.EPowerDistPanel.*;
 import us.ilite.robot.Robot;
 import us.ilite.robot.hardware.*;
 
+import java.util.Optional;
+
 /**
  * Class for running all drivetrain train control operations from both autonomous and
  * driver-control.
@@ -112,14 +114,14 @@ public class DriveModule extends Module {
 	private PIDController mHoldRightPositionPid;
 	private boolean mStartHoldingPosition;
 
-	private final CANSparkMax mLeftMaster;
-	private final CANSparkMax mLeftFollower;
-	private final CANSparkMax mRightMaster;
-	private final CANSparkMax mRightFollower;
-	private final CANEncoder mLeftEncoder;
-	private final CANEncoder mRightEncoder;
-	private final CANPIDController mLeftCtrl;
-	private final CANPIDController mRightCtrl;
+	private final Optional<CANSparkMax> mLeftMaster;
+	private final Optional<CANSparkMax> mLeftFollower;
+	private final Optional<CANSparkMax> mRightMaster;
+	private final Optional<CANSparkMax> mRightFollower;
+	private final Optional<CANEncoder> mLeftEncoder;
+	private final Optional<CANEncoder> mRightEncoder;
+	private final Optional<CANPIDController> mLeftCtrl;
+	private final Optional<CANPIDController> mRightCtrl;
 
 	private static final SparkMaxFactory.Configuration kDriveConfig = new SparkMaxFactory.Configuration();
 	static {
@@ -129,36 +131,60 @@ public class DriveModule extends Module {
 	public DriveModule() {
 		mLeftMaster = SparkMaxFactory.createSparkMax(Settings.Hardware.CAN.kDriveLeftMaster, kDriveConfig);
 		mLeftFollower = SparkMaxFactory.createSparkMax(Settings.Hardware.CAN.kDriveLeftFollower, kDriveConfig);
-		mLeftFollower.follow(mLeftMaster);
-		mLeftEncoder = new CANEncoder(mLeftMaster);
-		mLeftCtrl = mLeftMaster.getPIDController();
-		mLeftCtrl.setOutputRange(-kDriveTrainMaxVelocityRPM, kDriveTrainMaxVelocityRPM);
+
+		CANEncoder leftEncoder = null;
+		CANPIDController leftCtrl = null;
+		if(mLeftMaster.isPresent() && mLeftFollower.isPresent()) {
+			mLeftFollower.get().follow(mLeftMaster.get());
+			leftEncoder = new CANEncoder(mLeftMaster.get());
+			leftCtrl = mLeftMaster.get().getPIDController();
+			leftCtrl.setOutputRange(-kDriveTrainMaxVelocityRPM, kDriveTrainMaxVelocityRPM);
+		}
+		mLeftEncoder = Optional.ofNullable(leftEncoder);
+		mLeftCtrl = Optional.ofNullable(leftCtrl);
+
 		mRightMaster = SparkMaxFactory.createSparkMax(Settings.Hardware.CAN.kDriveRightMaster, kDriveConfig);
 		mRightFollower = SparkMaxFactory.createSparkMax(Settings.Hardware.CAN.kDriveRightFollower, kDriveConfig);
-		mRightFollower.follow(mRightMaster);
-		mRightEncoder = new CANEncoder(mRightMaster);
-		mRightCtrl = mRightMaster.getPIDController();
-		mRightCtrl.setOutputRange(-kDriveTrainMaxVelocityRPM, kDriveTrainMaxVelocityRPM);
-		mRightMaster.setInverted(true);
-		mRightFollower.setInverted(true);
+
+		CANEncoder rightEncoder = null;
+		CANPIDController rightCtrl = null;
+		if(mRightMaster.isPresent() && mRightFollower.isPresent()) {
+			mRightFollower.get().follow(mRightMaster.get());
+			rightEncoder = new CANEncoder(mRightMaster.get());
+			rightCtrl = mRightMaster.get().getPIDController();
+			rightCtrl.setOutputRange(-kDriveTrainMaxVelocityRPM, kDriveTrainMaxVelocityRPM);
+			mRightMaster.get().setInverted(true);
+			mRightFollower.get().setInverted(true);
+
+		}
+		mRightEncoder = Optional.ofNullable(rightEncoder);
+		mRightCtrl = Optional.ofNullable(rightCtrl);
+
 		mGyro = new Pigeon(Settings.Hardware.CAN.kPigeon);
 //		mGyro = new ADIS16470();
 
-
-		HardwareUtils.setGains(mLeftCtrl, vPID);
-		HardwareUtils.setGains(mRightCtrl, vPID);
-		HardwareUtils.setGains(mLeftCtrl, dPID);
-		HardwareUtils.setGains(mRightCtrl, dPID);
+		if(mLeftCtrl.isPresent() && mRightCtrl.isPresent()) {
+			HardwareUtils.setGains(mLeftCtrl.get(), vPID);
+			HardwareUtils.setGains(mRightCtrl.get(), vPID);
+			HardwareUtils.setGains(mLeftCtrl.get(), dPID);
+			HardwareUtils.setGains(mRightCtrl.get(), dPID);
+		}
 
 		//TODO - we want to do use our conversion factor calculated above, but that requires re-turning of F & P
-		mLeftEncoder.setPositionConversionFactor(1d);
-		mLeftEncoder.setVelocityConversionFactor(1d);
-		mRightEncoder.setPositionConversionFactor(1d);
-		mRightEncoder.setPositionConversionFactor(1d);
-		mLeftMaster.burnFlash();
-		mLeftFollower.burnFlash();
-		mRightMaster.burnFlash();
-		mRightFollower.burnFlash();
+
+		if(mLeftEncoder.isPresent() && mRightEncoder.isPresent()) {
+			mLeftEncoder.get().setPositionConversionFactor(1d);
+			mLeftEncoder.get().setVelocityConversionFactor(1d);
+			mRightEncoder.get().setPositionConversionFactor(1d);
+			mRightEncoder.get().setPositionConversionFactor(1d);
+		}
+
+		if(mLeftMaster.isPresent() && mRightMaster.isPresent()) {
+			mLeftMaster.get().burnFlash();
+			mLeftFollower.get().burnFlash();
+			mRightMaster.get().burnFlash();
+			mRightFollower.get().burnFlash();
+		}
 
 	}
 
@@ -183,12 +209,17 @@ public class DriveModule extends Module {
 		mHoldRightPositionPid.setSetpoint(0.0);
 		mStartHoldingPosition = false;
 
-		mLeftEncoder.setPosition(0.0);
-		mRightEncoder.setPosition(0.0);
-		HardwareUtils.setGains(mLeftCtrl, vPID);
-		HardwareUtils.setGains(mRightCtrl, vPID);
-		HardwareUtils.setGains(mLeftCtrl, dPID);
-		HardwareUtils.setGains(mRightCtrl, dPID);
+		if(mLeftEncoder.isPresent() && mRightEncoder.isPresent()) {
+			mLeftEncoder.get().setPosition(0.0);
+			mRightEncoder.get().setPosition(0.0);
+		}
+
+		if(mLeftCtrl.isPresent() && mRightCtrl.isPresent()) {
+			HardwareUtils.setGains(mLeftCtrl.get(), vPID);
+			HardwareUtils.setGains(mRightCtrl.get(), vPID);
+			HardwareUtils.setGains(mLeftCtrl.get(), dPID);
+			HardwareUtils.setGains(mRightCtrl.get(), dPID);
+		}
 
 		System.err.println(" ==== DRIVE MAX ACCEL (RPM): " + (kDriveMaxAccel_simulated.feet() / kDriveNEOVelocityFactor / 1.2 * 0.4));
 	}
@@ -196,14 +227,20 @@ public class DriveModule extends Module {
 	@Override
 	public void readInputs(double pNow) {
 		mGyro.update(pNow);
-		db.drivetrain.set(L_ACTUAL_POS_FT, mLeftEncoder.getPosition() * kDriveNEOPositionFactor);
-		db.drivetrain.set(L_ACTUAL_VEL_FT_s, mLeftEncoder.getVelocity() * kDriveNEOVelocityFactor);
-		db.drivetrain.set(R_ACTUAL_POS_FT, mRightEncoder.getPosition() * kDriveNEOPositionFactor);
-		db.drivetrain.set(R_ACTUAL_VEL_FT_s, mRightEncoder.getVelocity() * kDriveNEOVelocityFactor);
-		db.drivetrain.set(LEFT_CURRENT, mLeftMaster.getOutputCurrent());
-		db.drivetrain.set(RIGHT_CURRENT, mRightMaster.getOutputCurrent());
-		db.drivetrain.set(LEFT_VOLTAGE, mLeftMaster.getVoltageCompensationNominalVoltage());
-		db.drivetrain.set(RIGHT_VOLTAGE, mRightMaster.getVoltageCompensationNominalVoltage());
+
+		if(mLeftEncoder.isPresent() && mRightEncoder.isPresent()) {
+			db.drivetrain.set(L_ACTUAL_POS_FT, mLeftEncoder.get().getPosition() * kDriveNEOPositionFactor);
+			db.drivetrain.set(L_ACTUAL_VEL_FT_s, mLeftEncoder.get().getVelocity() * kDriveNEOVelocityFactor);
+			db.drivetrain.set(R_ACTUAL_POS_FT, mRightEncoder.get().getPosition() * kDriveNEOPositionFactor);
+			db.drivetrain.set(R_ACTUAL_VEL_FT_s, mRightEncoder.get().getVelocity() * kDriveNEOVelocityFactor);
+		}
+
+		if(mLeftMaster.isPresent() && mRightMaster.isPresent()) {
+			db.drivetrain.set(LEFT_CURRENT, mLeftMaster.get().getOutputCurrent());
+			db.drivetrain.set(RIGHT_CURRENT, mRightMaster.get().getOutputCurrent());
+			db.drivetrain.set(LEFT_VOLTAGE, mLeftMaster.get().getVoltageCompensationNominalVoltage());
+			db.drivetrain.set(RIGHT_VOLTAGE, mRightMaster.get().getVoltageCompensationNominalVoltage());
+		}
 		db.drivetrain.set(IS_CURRENT_LIMITING, EPowerDistPanel.isAboveCurrentThreshold(kCurrentLimitAmps, Robot.DATA.pdp, kPdpSlots));
 		db.imu.set(EGyro.HEADING_DEGREES, -mGyro.getHeading().getDegrees());
 		db.imu.set(EGyro.YAW_OMEGA_DEGREES, mGyro.getYawRate().getDegrees());
@@ -243,16 +280,25 @@ public class DriveModule extends Module {
 				SmartDashboard.putNumber("ACTUAL YAW", (Robot.DATA.imu.get(EGyro.YAW_DEGREES)));
 //				mLeftCtrl.setReference(d.getLeftOutput() * kDriveTrainMaxVelocity, kVelocity, VELOCITY_PID_SLOT, 0);
 //				mRightCtrl.setReference(d.getRightOutput() * kDriveTrainMaxVelocity, kVelocity, VELOCITY_PID_SLOT, 0);
-				mLeftCtrl.setReference((throttle+turn) * kDriveTrainMaxVelocityRPM, kSmartVelocity, VELOCITY_PID_SLOT, 0);
-				mRightCtrl.setReference((throttle-turn) * kDriveTrainMaxVelocityRPM, kSmartVelocity, VELOCITY_PID_SLOT, 0);
+
+				if(mLeftCtrl.isPresent() && mRightCtrl.isPresent()) {
+					mLeftCtrl.get().setReference((throttle + turn) * kDriveTrainMaxVelocityRPM, kSmartVelocity, VELOCITY_PID_SLOT, 0);
+					mRightCtrl.get().setReference((throttle - turn) * kDriveTrainMaxVelocityRPM, kSmartVelocity, VELOCITY_PID_SLOT, 0);
+				}
 				break;
 			case PATH_FOLLOWING_BASIC:
-				mLeftCtrl.setReference(db.drivetrain.get(L_PATH_FT_s) / kDriveNEOVelocityFactor, kVelocity, VELOCITY_PID_SLOT, 0);
-				mRightCtrl.setReference(db.drivetrain.get(R_PATH_FT_s) / kDriveNEOVelocityFactor, kVelocity, VELOCITY_PID_SLOT, 0);
+				if(mLeftCtrl.isPresent() && mRightCtrl.isPresent()) {
+					mLeftCtrl.get().setReference(db.drivetrain.get(L_PATH_FT_s) / kDriveNEOVelocityFactor, kVelocity, VELOCITY_PID_SLOT, 0);
+					mRightCtrl.get().setReference(db.drivetrain.get(R_PATH_FT_s) / kDriveNEOVelocityFactor, kVelocity, VELOCITY_PID_SLOT, 0);
+				}
 				break;
 			case PERCENT_OUTPUT:
-				mLeftMaster.set(throttle+turn);
-				mRightMaster.set(throttle-turn);
+
+				if(mLeftMaster.isPresent() && mRightMaster.isPresent()) {
+
+						mLeftMaster.get().set(throttle + turn);
+						mRightMaster.get().set(throttle - turn);
+				}
 				break;
 		}
 	}
