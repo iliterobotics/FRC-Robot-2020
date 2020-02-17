@@ -5,30 +5,46 @@ import com.flybotix.hfr.util.log.ILog;
 import com.flybotix.hfr.util.log.Logger;
 import us.ilite.common.config.Settings;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 public class CSVLogger {
     public static LinkedBlockingDeque<Log> kCSVLoggerQueue = new LinkedBlockingDeque<>();
-    private List<CSVWriter> mCSVWriters;
-    private ILog mLogger = Logger.createLog(this.getClass());
+    private final Collection<CSVWriter> mCSVWriters;
+    ILog mLogger = Logger.createLog(this.getClass());
     private static final ScheduledExecutorService mExService =
             Executors.newSingleThreadScheduledExecutor((run)->new Thread(run, "My timer thread"));
-    private ScheduledFuture<?> scheduledFuture;
+    private final ScheduledFuture<?> scheduledFuture;
     private boolean mIsAcceptingToQueue;
 
     public CSVLogger( ) {
-        mCSVWriters = new ArrayList<>();
-        for ( RobotCodex c : Robot.DATA.mLoggedCodexes ) {
-            mCSVWriters.add( new CSVWriter( c ) );
-        }
-        mIsAcceptingToQueue = false;
-        logFromCodexToCSVHeader();
-        scheduledFuture = mExService.scheduleAtFixedRate(this::run, Settings.kSecondsToUpdateCSVLogger, Settings.kSecondsToUpdateCSVLogger, TimeUnit.SECONDS);
+        this(Robot.DATA.mLoggedCodexes, true, true);
     }
 
-    private void run() {
+    CSVLogger(RobotCodex [] codexes, boolean logHeader, boolean startTimer) {
+        this(Arrays.stream(codexes).map(CSVWriter::new).collect(Collectors.toList()), logHeader, startTimer);
+
+    }
+    CSVLogger(Collection<CSVWriter>writers, boolean logHeader, boolean startTimer) {
+        mCSVWriters = writers;
+        mIsAcceptingToQueue = false;
+        if(logHeader) {
+            logFromCodexToCSVHeader();
+        }
+
+        ScheduledFuture<?> scheduled = null;
+        if(startTimer) {
+            scheduled = mExService.scheduleAtFixedRate(this::run, Settings.kSecondsToUpdateCSVLogger, Settings.kSecondsToUpdateCSVLogger, TimeUnit.SECONDS);
+        }
+        scheduledFuture = scheduled;
+    }
+
+    void run() {
         if ( !kCSVLoggerQueue.isEmpty() ) {
             try {
                 ArrayList<Log> kTempCSVLogs = new ArrayList<>();
@@ -51,7 +67,11 @@ public class CSVLogger {
     public void logFromCodexToCSVLog( Log pLog ) {
         for ( CSVWriter c : mCSVWriters ) {
             if ( c.getMetaDataOfAssociatedCodex().gid() == pLog.getmGlobalId() ) {
-                c.log( pLog.getmLogData() );
+                try {
+                    c.log( pLog.getmLogData() );
+                } catch (IOException e) {
+                    mLogger.debug("Exception thrown while trying to log", e);
+                }
                 break;
             }
         }

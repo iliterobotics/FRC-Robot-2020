@@ -74,9 +74,8 @@ public class CSVWriter {
         }
     }
 
-    public void log( String s ) {
+    public void log( String s ) throws IOException {
 
-        try {
             if ( bw.isPresent() ) {
                 bw.get().append(s);
                 bw.get().newLine();
@@ -86,7 +85,7 @@ public class CSVWriter {
                     mLog.error("Failure with logging codex: " + mCodex.meta().getEnum().getSimpleName() );
                     mLog.error( "Could not find Path:  (Path to USB)  on roborio! Try plugging in the USB." );
                     mLogFailures++;
-                    try {
+
                         file = file();
                         if ( file != null ) {
                             bw = Optional.of( new BufferedWriter( new FileWriter( file ) ) );
@@ -94,10 +93,7 @@ public class CSVWriter {
                         else {
                             bw = Optional.empty();
                         }
-                    }
-                    catch( Exception e ) {
-                        e.printStackTrace();
-                    }
+
                 }
                 else if ( mLogFailures == Settings.kAcceptableLogFailures ) {
                     mLog.error("---------------------CSV LOGGING DISABLED----------------------");
@@ -105,9 +101,6 @@ public class CSVWriter {
                     mLogFailures++;
                 }
             }
-        } catch (IOException pE) {
-            System.out.println( pE.getLocalizedMessage() );
-        }
     }
 
     public void close() {
