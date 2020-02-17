@@ -49,13 +49,11 @@ public class CSVLogger {
             try {
                 ArrayList<Log> kTempCSVLogs = new ArrayList<>();
                 kCSVLoggerQueue.drainTo(kTempCSVLogs);
-                //mLogger.error( "Drained queue got: " + kTempCSVLogs.size() );
-
                 for ( Log log : kTempCSVLogs ) {
                     logFromCodexToCSVLog( log );
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                mLogger.debug("Caught an unexpected exception in the run method: " , e);
             }
         }
     }

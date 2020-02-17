@@ -12,7 +12,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.rmi.server.ExportException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Optional;
@@ -21,8 +20,6 @@ import static us.ilite.robot.CSVLogger.kCSVLoggerQueue;
 
 public class CSVWriter {
 
-    //public static final String USB_DIR = "/u";
-    //public static final String USER_DIR = System.getProperty("user.home");
     private static final String LOG_PATH_FORMAT = "/logs/%s/%s-%s-%s.csv";
     private static String eventName = DriverStation.getInstance().getEventName();
     private Optional<BufferedWriter> bw;
@@ -49,7 +46,7 @@ public class CSVWriter {
                 bw = Optional.of( new BufferedWriter( new FileWriter( file ) ) );
             }
         } catch ( Exception e ) {
-            e.printStackTrace();
+            mLog.debug("There was an error in the constructor", e);
         }
 
         if ( eventName.length() <= 0 ) {
@@ -61,7 +58,7 @@ public class CSVWriter {
     public void handleCreation(File pFile) {
         //Makes every folder before the file if the CSV's parent folder doesn't exist
         if(Files.notExists(pFile.toPath())) {
-            mLog.error( pFile.getAbsoluteFile().getParentFile().mkdirs() );
+            mLog.debug( pFile.getAbsoluteFile().getParentFile().mkdirs() );
         }
 
         //Creates the .CSV if it doesn't exist
@@ -69,7 +66,7 @@ public class CSVWriter {
             try {
                 pFile.createNewFile();
             } catch (IOException e) {
-                e.printStackTrace();
+                mLog.debug("Error attempting to create file: " + pFile);
             }
         }
     }
@@ -82,8 +79,8 @@ public class CSVWriter {
             }
             else {
                 if ( mLogFailures < Settings.kAcceptableLogFailures ) {
-                    mLog.error("Failure with logging codex: " + mCodex.meta().getEnum().getSimpleName() );
-                    mLog.error( "Could not find Path:  (Path to USB)  on roborio! Try plugging in the USB." );
+                    mLog.debug("Failure with logging codex: " + mCodex.meta().getEnum().getSimpleName() );
+                    mLog.debug( "Could not find Path:  (Path to USB)  on roborio! Try plugging in the USB." );
                     mLogFailures++;
 
                         file = file();
@@ -96,7 +93,7 @@ public class CSVWriter {
 
                 }
                 else if ( mLogFailures == Settings.kAcceptableLogFailures ) {
-                    mLog.error("---------------------CSV LOGGING DISABLED----------------------");
+                    mLog.debug("---------------------CSV LOGGING DISABLED----------------------");
                     Robot.mCSVLogger.closeWriters();
                     mLogFailures++;
                 }
@@ -110,7 +107,7 @@ public class CSVWriter {
                 bw.get().close();
             }
             catch ( Exception e ) {
-                e.printStackTrace();
+               mLog.debug("Error closing the bw", e);
             }
 
         }
@@ -126,27 +123,15 @@ public class CSVWriter {
 
     public File file() {
 
-        // Don't default to home dir to avoid filling up memory
-//        String dir = "";
-//        if(Files.notExists(new File(USB_DIR).toPath())) {
-//            dir = USER_DIR;
-//        } else {
-//            dir = USB_DIR;
-//        }
-
         //THIS CODE IS USED FOR A MULTI-PARTITION DRIVE AND FINDING IT'S LOCATION IN THE ROBORIO FILE DIRECTORIES
         String dir = "";
         char[] letters = {'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'};
         for ( char c : letters ) {
-            if (Files.exists((new File(String.format("/%c/logs/here.txt", c )).toPath()))) {
+            if (Files.exists((new File(String.format("/%c/logs/here.txt", c)).toPath()))) {
                 dir = "/" + c;
                 break;
             }
         }
-
-        //String dir = USB_DIR;
-
-//        if (!dir.isEmpty()) {
         File file = null;
         if (mCodex.meta().getEnum().getSimpleName().equals("ELogitech310")) {
             if (mCodex.meta().gid() == Robot.DATA.driverinput.meta().gid()) {
@@ -173,12 +158,8 @@ public class CSVWriter {
             ));
         }
 
-        mLog.error("Creating log file at ", file.toPath());
+        mLog.debug("Creating log file at ", file.toPath());
 
         return file;
-//        }
-
-//        mLog.error("Did not make log file for: " + mCodex.meta().getEnum().getSimpleName());
-//        return null;
     }
 }
