@@ -42,4 +42,37 @@ public class CSVLoggerTest {
         verify(mockedLog, times(1)).debug(eq("Exception thrown while trying to log"), any(IOException.class));
 
     }
+
+    /**
+     * The purpose of this test is to make sure that if an {@link Exception} is thrown, then subsequent logs are called
+     * correctly
+     */
+    @Test
+    public void testlogFromCodexToCSVLog_FirstLoggerThrowsIOException() throws IOException {
+        ILog mockedLog = mock(ILog.class);
+        CSVWriter mockFirstWriter = mock(CSVWriter.class);
+        CSVWriter mockSecondWriter = mock(CSVWriter.class);
+
+        CodexMetadata mockedMeta = mock(CodexMetadata.class);
+        when(mockedMeta.gid()).thenReturn(123);
+
+        when(mockFirstWriter.getMetaDataOfAssociatedCodex()).thenReturn(mockedMeta);
+        when(mockSecondWriter.getMetaDataOfAssociatedCodex()).thenReturn(mockedMeta);
+
+        String logMessage = "HELLO";
+        doThrow(new IOException()).when(mockFirstWriter).log(logMessage);
+
+        CSVLogger testedLogger =
+                new CSVLogger(Arrays.asList(mockFirstWriter, mockSecondWriter), false, false);
+        testedLogger.mLogger = mockedLog;
+
+        Log mockedLogEvent  = mock(Log.class);
+        when(mockedLogEvent.getmLogData()).thenReturn(logMessage);
+        when(mockedLogEvent.getmGlobalId()).thenReturn(123);
+        testedLogger.logFromCodexToCSVLog(mockedLogEvent);
+
+        String exceptionMessage = "Exception thrown while trying to log";
+        verify(mockedLog, times(1)).debug(eq(exceptionMessage), any(IOException.class));
+        verify(mockSecondWriter, times(1)).log(logMessage);
+    }
 }

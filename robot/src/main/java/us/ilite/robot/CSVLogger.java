@@ -67,10 +67,11 @@ public class CSVLogger {
             if ( c.getMetaDataOfAssociatedCodex().gid() == pLog.getmGlobalId() ) {
                 try {
                     c.log( pLog.getmLogData() );
+                    break;
                 } catch (IOException e) {
                     mLogger.debug("Exception thrown while trying to log", e);
                 }
-                break;
+
             }
         }
     }
