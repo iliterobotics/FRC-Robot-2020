@@ -67,7 +67,11 @@ public class FlywheelModule extends Module {
     private static ProfileGains kFlywheelGains = new ProfileGains()
             .slot(FLYWHEEL_SLOT)
             .p(0.05)
-            .f(0.0575)
+            // https://www.chiefdelphi.com/t/falcon-500-closed-loop-velocity/378170/9
+            // Converts the 0.018 Vs/rad to 0.070617 for kF
+            .f(0.070617)
+            // This was experimentally determined
+//            .f(0.0575)
 //            .kA(0.00165)
 //            .kV(0.018)
             ;
@@ -80,11 +84,13 @@ public class FlywheelModule extends Module {
     public FlywheelModule() {
         SmartDashboard.putNumber("kRadiansPerSecToTalonTicksPer100ms", kRadiansPerSecToTalonTicksPer100ms);
         SmartDashboard.putNumber("kVelocityConversion",kVelocityConversion);
+        mFlywheelFalconMaster.configVoltageCompSaturation(11.0);
         mFlywheelFalconMaster = new TalonFX(Settings.Hardware.CAN.kFalconMasterId);
         mFlywheelFalconMaster.setNeutralMode(NeutralMode.Coast);
         mFlywheelFalconMaster.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, 0, 0);
 
         mFlywheelFalconFollower = new TalonFX(Settings.Hardware.CAN.kFalconFollowerId);
+        mFlywheelFalconFollower.configVoltageCompSaturation(11.0);
         mFlywheelFalconFollower.setNeutralMode(NeutralMode.Coast);
         mFlywheelFalconFollower.setInverted(true);
         mFlywheelFalconFollower.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, 0, 0);
@@ -113,7 +119,12 @@ public class FlywheelModule extends Module {
 
     @Override
     public void readInputs(double pNow) {
-        db.flywheel.set(CURRENT_BALL_VELOCITY, mFlywheelFalconMaster.getSelectedSensorVelocity() / kVelocityConversion);
+        double vel = mFlywheelFalconMaster.getSelectedSensorVelocity();
+        double volt = mFlywheelFalconMaster.getMotorOutputVoltage();
+        db.flywheel.set(FLYWHEEL_CURRENT_RAW_SPEED, vel);
+        db.flywheel.set(FLYWHEEL_CURRENT_MOTOR_VOLTAGE, volt);
+        SmartDashboard.putNumber("Flywheel kF", volt * 1023.0 / 12.0 / vel);
+        db.flywheel.set(CURRENT_BALL_VELOCITY, vel / kVelocityConversion);
         db.flywheel.set(CURRENT_FEEDER_VELOCITY_RPM, mFeederInternalEncoder.getVelocity());
         double position = mHoodPot.getPosition();
         db.flywheel.set(POT_RAW_VALUE, position);
