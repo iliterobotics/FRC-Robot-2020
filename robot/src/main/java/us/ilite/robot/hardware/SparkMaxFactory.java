@@ -5,6 +5,8 @@ import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 
+import java.util.Optional;
+
 /**
  * This is a factory class for the Spark MAX motor controller that re-configures
  * all settings to our defaults. Note that settings must be explicitly flashed
@@ -33,28 +35,42 @@ public class SparkMaxFactory {
         // kFollowConfiguration.CONTROL_FRAME_PERIOD = 100;
     }
 
-    public static CANSparkMax createDefaultSparkMax(int pId, MotorType pMotorType) {
+    public static Optional<CANSparkMax> createDefaultSparkMax(int pId, MotorType pMotorType) {
         return createSparkMax(pId, kDefaultConfiguration);
     }
 
-    public static CANSparkMax createFollowerSparkMax(int pId, CANSparkMax pMaster, MotorType pMotorType) {
-        CANSparkMax spark = createSparkMax(pId, kFollowConfiguration);
-        spark.follow(pMaster);
+    public static Optional<CANSparkMax> createFollowerSparkMax(int pId, CANSparkMax pMaster, MotorType pMotorType) {
+        Optional<CANSparkMax> spark = createSparkMax(pId, kFollowConfiguration);
+
+        if(spark.isPresent()) {
+            spark.get().follow(pMaster);
+        }
         return spark;
     }
 
-    public static CANSparkMax createSparkMax(int pId, Configuration pConfiguration) {
+    public static Optional<CANSparkMax> createSparkMax(int pId, Configuration pConfiguration) {
         CANSparkMax spark = new CANSparkMax(pId, pConfiguration.MOTOR_TYPE);
-        spark.restoreFactoryDefaults();
-        spark.setCANTimeout(pConfiguration.CAN_TIMEOUT);
-        spark.setIdleMode(pConfiguration.IDLE_MODE);
-        spark.setPeriodicFramePeriod(PeriodicFrame.kStatus0, pConfiguration.STATUS_0_PERIOD_MS);
-        spark.setPeriodicFramePeriod(PeriodicFrame.kStatus1, pConfiguration.STATUS_1_PERIOD_MS);
-        spark.setPeriodicFramePeriod(PeriodicFrame.kStatus2, pConfiguration.STATUS_2_PERIOD_MS);
-        spark.setSecondaryCurrentLimit(pConfiguration.SECONDARY_CURRENT_LIMIT);
-        spark.setSmartCurrentLimit(pConfiguration.SMART_CURRENT_LIMIT);
+        if(!canSparkMaxHasError(spark)) {
+            spark.restoreFactoryDefaults();
+            spark.setCANTimeout(pConfiguration.CAN_TIMEOUT);
+            spark.setIdleMode(pConfiguration.IDLE_MODE);
+            spark.setPeriodicFramePeriod(PeriodicFrame.kStatus0, pConfiguration.STATUS_0_PERIOD_MS);
+            spark.setPeriodicFramePeriod(PeriodicFrame.kStatus1, pConfiguration.STATUS_1_PERIOD_MS);
+            spark.setPeriodicFramePeriod(PeriodicFrame.kStatus2, pConfiguration.STATUS_2_PERIOD_MS);
+            spark.setSecondaryCurrentLimit(pConfiguration.SECONDARY_CURRENT_LIMIT);
+            spark.setSmartCurrentLimit(pConfiguration.SMART_CURRENT_LIMIT);
+        } else {
+            spark = null;
+        }
+        return Optional.ofNullable(spark);
+    }
 
-        return spark;
+    private static boolean canSparkMaxHasError(CANSparkMax spark) {
+        short sticky = spark.getFaults();
+        int unsignedSticky = Short.toUnsignedInt(sticky);
+        int canRX = CANSparkMax.FaultID.kCANRX.value & unsignedSticky;
+        int can = CANSparkMax.FaultID.kCANTX.value & unsignedSticky;
+        return (canRX != 0) || (can != 0);
     }
 
 }

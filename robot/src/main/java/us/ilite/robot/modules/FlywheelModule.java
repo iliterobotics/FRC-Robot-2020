@@ -18,6 +18,8 @@ import us.ilite.robot.hardware.HardwareUtils;
 import us.ilite.robot.hardware.SparkMaxFactory;
 import us.ilite.robot.hardware.TalonSRXFactory;
 
+import java.util.Optional;
+
 import static us.ilite.common.types.EShooterSystemData.*;
 
 public class FlywheelModule extends Module {
@@ -25,7 +27,7 @@ public class FlywheelModule extends Module {
     // Flywheel Motors
     private TalonFX mFlywheelFalconMaster;
     private TalonFX mFlywheelFalconFollower;
-    private CANSparkMax mFeeder;
+    private Optional<CANSparkMax> mFeeder;
     private TalonSRX mTurret;
     private ContinuousRotationServo mHoodServo;
 
@@ -34,7 +36,7 @@ public class FlywheelModule extends Module {
 //    private AnalogPotentiometer mHoodPot;
 
     // This is for the feeder MAX connection
-    private CANAnalog mHoodPot;
+    private Optional<CANAnalog> mHoodPot;
 
     // Constants
     private static final double kHoodGearRatio = 32.0 / 20.0 * 14.0 / 360.0;//First stage was 32/20 in code but 36/20 in integration
@@ -72,7 +74,7 @@ public class FlywheelModule extends Module {
 //            .kV(0.018)
             ;
     private PIDController mHoodPID = new PIDController(5, 0, 0);
-    private CANEncoder mFeederInternalEncoder;
+    private Optional<CANEncoder> mFeederInternalEncoder;
 
     private double mIntegral = 0;
     private final int kFlywheelFalconPIDSlot = 0;
@@ -90,14 +92,24 @@ public class FlywheelModule extends Module {
         mFlywheelFalconFollower.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, 0, 0);
 
         mFeeder = SparkMaxFactory.createDefaultSparkMax(Settings.Hardware.CAN.kFeederId, CANSparkMaxLowLevel.MotorType.kBrushless);
-        mFeederInternalEncoder = new CANEncoder(mFeeder);
-        mFeeder.setSmartCurrentLimit(30);
+
+        CANEncoder feederInternalEncoder = null;
+        if(mFeeder.isPresent()) {
+            feederInternalEncoder = new CANEncoder(mFeeder.get());
+            mFeeder.get().setSmartCurrentLimit(30);
+        }
+        mFeederInternalEncoder = Optional.ofNullable(feederInternalEncoder);
 
 
         mTurret = TalonSRXFactory.createDefaultTalon(Settings.Hardware.CAN.kSRXTurretId);
 
         mHoodServo = new ContinuousRotationServo(Settings.Hardware.PWM.kHoodServoId).inverted(true);
-        mHoodPot = mFeeder.getAnalog(CANAnalog.AnalogMode.kAbsolute);
+
+        CANAnalog hoodPot = null;
+        if(mFeeder.isPresent()) {
+            hoodPot = mFeeder.get().getAnalog(CANAnalog.AnalogMode.kAbsolute);
+        }
+        mHoodPot = Optional.ofNullable(hoodPot);
 
 //        mHoodAI = new AnalogInput(Settings.Hardware.Analog.kHoodPot);
 //        mHoodPot = new AnalogPotentiometer(mHoodAI);
@@ -114,10 +126,16 @@ public class FlywheelModule extends Module {
     @Override
     public void readInputs(double pNow) {
         db.flywheel.set(CURRENT_BALL_VELOCITY, mFlywheelFalconMaster.getSelectedSensorVelocity() / kVelocityConversion);
-        db.flywheel.set(CURRENT_FEEDER_VELOCITY_RPM, mFeederInternalEncoder.getVelocity());
-        double position = mHoodPot.getPosition();
-        db.flywheel.set(POT_RAW_VALUE, position);
-        db.flywheel.set(CURRENT_HOOD_ANGLE, convertToHoodAngle(position));
+
+        if(mFeederInternalEncoder.isPresent()) {
+            db.flywheel.set(CURRENT_FEEDER_VELOCITY_RPM, mFeederInternalEncoder.get().getVelocity());
+        }
+
+        if(mHoodPot.isPresent()) {
+            double position = mHoodPot.get().getPosition();
+            db.flywheel.set(POT_RAW_VALUE, position);
+            db.flywheel.set(CURRENT_HOOD_ANGLE, convertToHoodAngle(position));
+        }
 //        db.flywheel.set(POT_NORM_VALUE, mHoodPot.get());
 //        db.flywheel.set(POT_RAW_VALUE, mHoodAI.getValue());
         db.flywheel.set(HOOD_SERVO_RAW_VALUE, mHoodServo.getRawOutputValue());
@@ -165,7 +183,10 @@ public class FlywheelModule extends Module {
     private void setFeeder() {
         // Cannot set voltage mode if an external sensor is attached
 //        mFeeder.setVoltage(db.flywheel.get(FEEDER_OUTPUT_OPEN_LOOP) / 12.0);
-        mFeeder.set(db.flywheel.get(FEEDER_OUTPUT_OPEN_LOOP));
+
+        if(mFeeder.isPresent()) {
+            mFeeder.get().set(db.flywheel.get(FEEDER_OUTPUT_OPEN_LOOP));
+        }
     }
 
     private void setFlywheel() {
