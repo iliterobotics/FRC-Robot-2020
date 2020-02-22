@@ -91,6 +91,18 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 task runAllTests(type: Test);
+task runRegularTests(type: Test) {
+    useJUnit {
+        excludeCategories 'us.ilite.CriticalTest'
+        includeCategories 'us.ilite.RegularTest'
+    }
+}
+task runUncategorizedTests(type: Test) {
+    useJUnit {
+        excludeCategories 'us.ilite.CriticalTest'
+        excludeCategories 'us.ilite.RegularTest'
+    }
+}
 
 tasks.withType(Test) {
     testLogging {
