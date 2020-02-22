@@ -102,6 +102,16 @@ public class CSVWriter {
         }
     }
 
+    public void flush() {
+        if ( bw.isPresent() ) {
+            try{
+                bw.get().flush();
+            } catch ( Exception e ) {
+                mLog.error("We've got Issues");
+            }
+        }
+    }
+
     public void writeHeader() {
         kCSVLoggerQueue.add( new Log( mCodex.getCSVHeader(), mCodex.meta().gid() ) );
     }

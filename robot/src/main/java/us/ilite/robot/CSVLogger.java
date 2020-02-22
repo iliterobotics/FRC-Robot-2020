@@ -80,6 +80,13 @@ public class CSVLogger {
         }
     }
 
+    public void dump(){
+        run();
+        for ( CSVWriter cw : mCSVWriters ) {
+            cw.flush();
+        }
+    }
+
     public void closeWriters() {
         for ( CSVWriter cw : mCSVWriters ) {
             cw.close();

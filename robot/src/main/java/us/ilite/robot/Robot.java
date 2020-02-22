@@ -109,6 +109,10 @@ public class Robot extends TimedRobot {
             mLogger.warn("------------Not Logging to CSV------------");
         }
 
+        if ( Settings.kIsLogging ) {
+            mCSVLogger.stop();
+        }
+
     }
 
     /**
@@ -122,9 +126,9 @@ public class Robot extends TimedRobot {
 
     @Override
     public void autonomousInit() {
-//        if ( Settings.kIsLogging ) {
-//            mCSVLogger.start();
-//        }
+        if ( Settings.kIsLogging ) {
+            mCSVLogger.start();
+        }
 
         MODE=AUTONOMOUS;
         mActiveController = new AutonCalibration();
@@ -158,12 +162,19 @@ public class Robot extends TimedRobot {
 
     @Override
     public void disabledInit() {
+
+        if ( Settings.kIsLogging ) {
+            for ( RobotCodex c : DATA.mLoggedCodexes ) {
+                mCSVLogger.addToQueue( new Log( "\n------------------DISABLED-------------------\n", c.meta().gid()) );
+                mCSVLogger.dump();
+            }
+            mCSVLogger.stop();
+        }
+
         MODE=DISABLED;
         mLogger.info("Disabled Initialization");
 
         mRunningModules.shutdown(CLOCK.getCurrentTime());
-
-//        mCSVLogger.stop();
 
         if(mActiveController != null) {
             mActiveController.setEnabled(false);
