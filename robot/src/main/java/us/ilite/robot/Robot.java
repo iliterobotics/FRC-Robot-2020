@@ -166,8 +166,8 @@ public class Robot extends TimedRobot {
         if ( Settings.kIsLogging ) {
             for ( RobotCodex c : DATA.mLoggedCodexes ) {
                 mCSVLogger.addToQueue( new Log( "\n------------------DISABLED-------------------\n", c.meta().gid()) );
-                mCSVLogger.dump();
             }
+            mCSVLogger.dump();
             mCSVLogger.stop();
         }
 

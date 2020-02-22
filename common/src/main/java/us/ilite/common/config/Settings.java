@@ -20,8 +20,6 @@ public class Settings {
 
     public static boolean kIsLogging = true; // decide whether or not to log
 
-    public static double kDJOutput = .25;
-
     public static int sCODEX_COMMS_PORT = 5805;
 
     public static final String AUTO_PATH_PACKAGE = "us.ilite.robot.auto.paths";
@@ -41,16 +39,18 @@ public class Settings {
             public static int kHangerNeoID2 = 71;
 //            public static int kTalonThreeID = 65; // Change later
             public static final int kTurretGyroID = 61; // There isn't a gyro on the BunnyBot
-            public static final int kDJSpinnerVictorID = 50;
+
+            public static final int kShooterID = 66; // BunnyBot Shooter
+            public static final int kAcceleratorID = 61; // BunnyBot Conveyor
+            public static final int kTurretID = 69; // BunnyBot Hopper
+            public static final int kDJSpinnerVictorID = 12; //Aria Intake Motor
+
+
             public static int kTimeoutMs = 10; //use for on the fly updates
             public static int kLongTimeoutMs = 100; //use for constructors
 
             public static int kPigeonIDForFlywheel=80;
             public static int kFlywheelNeoAddress = 16;
-
-
-
-            public static final int kShooterID = 66; // BunnyBot Shooter
 
             public static int kSRXTurretId = 9;
             public static int kMAXFeederId = 10;
