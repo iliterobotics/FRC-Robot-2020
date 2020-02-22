@@ -11,7 +11,7 @@ import us.ilite.common.config.Settings;
 import us.ilite.common.types.EMatchMode;
 import us.ilite.common.types.ELimelightData;
 import us.ilite.common.IFieldComponent;
-import us.ilite.robot.Robot;
+import us.ilite.common.types.EShooterSystemData;
 import us.ilite.robot.modules.targetData.ITargetDataProvider;
 import static us.ilite.common.types.ELimelightData.*;
 
@@ -32,7 +32,7 @@ public class Limelight extends Module implements ITargetDataProvider {
     // =============================================================================
     public static double kHeightIn = 31.75;   //Measurements from Bunnybot for skew testing
     public static double kToBumperIn = 22.125;
-    public static double kAngleDeg = 24.85;
+    public static double kAngleDeg = 0;
 
     public static double llFOVVertical = 49.7;
     public static double llFOVHorizontal = 59.6;
@@ -54,38 +54,38 @@ public class Limelight extends Module implements ITargetDataProvider {
     public static double kRightCCoeff = -0.0437470770400814;
 
     private final NetworkTable mTable = NetworkTableInstance.getDefault().getTable(Settings.kFlywheelLimelightNetworkTable);
-
+    private double mHoodAngle;
 
     public Limelight() {
     }
 
     @Override
     public void modeInit(EMatchMode pMode, double pNow) {
-        Robot.DATA.goaltracking.set(TARGET_ID, (double) NONE.id());
+        db.goaltracking.set(TARGET_ID, (double) NONE.id());
     }
 
     @Override
     public void readInputs(double pNow) {
         boolean targetValid = mTable.getEntry("tv").getDouble(Double.NaN) > 0.0;
-        Robot.DATA.goaltracking.set(TV, targetValid ? 1.0d : 0d);
+        db.goaltracking.set(TV, targetValid ? 1.0d : 0d);
 
         if(targetValid) {
-            Robot.DATA.goaltracking.set(TX, mTable.getEntry("tx").getDouble(Double.NaN));
-            Robot.DATA.goaltracking.set(TY,mTable.getEntry("ty").getDouble(Double.NaN));
-            Robot.DATA.goaltracking.set(TA,mTable.getEntry("ta").getDouble(Double.NaN));
-            Robot.DATA.goaltracking.set(TS,mTable.getEntry("ts").getDouble(Double.NaN));
-            Robot.DATA.goaltracking.set(TL,mTable.getEntry("tl").getDouble(Double.NaN));
-            Robot.DATA.goaltracking.set(TSHORT,mTable.getEntry("tshort").getDouble(Double.NaN));
-            Robot.DATA.goaltracking.set(TLONG,mTable.getEntry("tlong").getDouble(Double.NaN));
-            Robot.DATA.goaltracking.set(THORIZ,mTable.getEntry("thoriz").getDouble(Double.NaN));
-            Robot.DATA.goaltracking.set(TVERT,mTable.getEntry("tvert").getDouble(Double.NaN));
-            if(Robot.DATA.goaltracking.get(TARGET_ID) != -1) {
-                Robot.DATA.goaltracking.set(CALC_DIST_TO_TARGET, calcTargetDistance(Field2020.FieldElement.values()[(int) Robot.DATA.goaltracking.get(TARGET_ID)].height()));
-                Robot.DATA.goaltracking.set(CALC_ANGLE_TO_TARGET, calcTargetApproachAngle());
-                Optional<Translation2d> p = calcTargetLocation(Field2020.FieldElement.values()[(int) Robot.DATA.goaltracking.get(TARGET_ID)]);
+            db.goaltracking.set(TX, mTable.getEntry("tx").getDouble(Double.NaN));
+            db.goaltracking.set(TY,mTable.getEntry("ty").getDouble(Double.NaN));
+            db.goaltracking.set(TA,mTable.getEntry("ta").getDouble(Double.NaN));
+            db.goaltracking.set(TS,mTable.getEntry("ts").getDouble(Double.NaN));
+            db.goaltracking.set(TL,mTable.getEntry("tl").getDouble(Double.NaN));
+            db.goaltracking.set(TSHORT,mTable.getEntry("tshort").getDouble(Double.NaN));
+            db.goaltracking.set(TLONG,mTable.getEntry("tlong").getDouble(Double.NaN));
+            db.goaltracking.set(THORIZ,mTable.getEntry("thoriz").getDouble(Double.NaN));
+            db.goaltracking.set(TVERT,mTable.getEntry("tvert").getDouble(Double.NaN));
+            if(db.goaltracking.get(TARGET_ID) != -1) {
+                db.goaltracking.set(CALC_DIST_TO_TARGET, calcTargetDistance(Field2020.FieldElement.values()[(int) db.goaltracking.get(TARGET_ID)].height()));
+                db.goaltracking.set(CALC_ANGLE_TO_TARGET, calcTargetApproachAngle());
+                Optional<Translation2d> p = calcTargetLocation(Field2020.FieldElement.values()[(int) db.goaltracking.get(TARGET_ID)]);
                 if(p.isPresent()) {
-                    Robot.DATA.goaltracking.set(CALC_TARGET_X, p.get().getX());
-                    Robot.DATA.goaltracking.set(CALC_TARGET_Y, p.get().getY());
+                    db.goaltracking.set(CALC_TARGET_X, p.get().getX());
+                    db.goaltracking.set(CALC_TARGET_Y, p.get().getY());
                 }
             }
         }
@@ -98,8 +98,8 @@ public class Limelight extends Module implements ITargetDataProvider {
         setStreamMode();
         setSnapshotMode();
         setPipeline();
-        Robot.DATA.goaltracking.set(ANGLE_FROM_HORIZON, kAngleDeg);
-//        Robot.DATA.limelight.set(ANGLE_FROM_HORIZON, Robot.DATA.flywheel.get(ANGLE_FROM_HORIZON)); //TODO Add angle functionality to flywheel module
+        mHoodAngle = db.flywheel.get(EShooterSystemData.CURRENT_HOOD_ANGLE);
+        db.goaltracking.set(ANGLE_FROM_HORIZON, getCameraAngleDeg());
     }
 
     @Override
@@ -108,37 +108,37 @@ public class Limelight extends Module implements ITargetDataProvider {
     }
 
     private void setPipeline() {
-        int mPipeline = (Robot.DATA.goaltracking.get(TARGET_ID) == -1) ?
+        int mPipeline = (db.goaltracking.get(TARGET_ID) == -1) ?
                         NONE.pipeline() :
-                        Field2020.FieldElement.values()[(int) Robot.DATA.goaltracking.get(TARGET_ID)].pipeline();
+                        Field2020.FieldElement.values()[(int) db.goaltracking.get(TARGET_ID)].pipeline();
 
-        Robot.DATA.goaltracking.set(PIPELINE, mPipeline);
-        mTable.getEntry("pipeline").setNumber(Robot.DATA.goaltracking.get(PIPELINE));
+        db.goaltracking.set(PIPELINE, mPipeline);
+        mTable.getEntry("pipeline").setNumber(db.goaltracking.get(PIPELINE));
     }
 
     private void setLedMode() {
-        mTable.getEntry("ledMode").setNumber(Robot.DATA.goaltracking.get(LED_MODE));
+        mTable.getEntry("ledMode").setNumber(db.goaltracking.get(LED_MODE));
     }
 
     private void setCamMode() {
-        mTable.getEntry("camMode").setNumber(Robot.DATA.goaltracking.get(CAM_MODE));
+        mTable.getEntry("camMode").setNumber(db.goaltracking.get(CAM_MODE));
     }
 
     private void setStreamMode() {
-        mTable.getEntry("stream").setNumber(Robot.DATA.goaltracking.get(STREAM_MODE));
+        mTable.getEntry("stream").setNumber(db.goaltracking.get(STREAM_MODE));
     }
 
     private void setSnapshotMode() {
-        mTable.getEntry("snapshot").setNumber(Robot.DATA.goaltracking.get(SNAPSHOT_MODE));
+        mTable.getEntry("snapshot").setNumber(db.goaltracking.get(SNAPSHOT_MODE));
     }
 
     public String toString() {
-        return Robot.DATA.goaltracking.toCSV();
+        return db.goaltracking.toCSV();
     }
 
     @Override
     public RobotCodex<ELimelightData> getTargetingData() {
-        return Robot.DATA.goaltracking;
+        return db.goaltracking;
     }
 
     @Override
@@ -148,7 +148,7 @@ public class Limelight extends Module implements ITargetDataProvider {
 
     @Override
     public double getCameraAngleDeg() {
-        return kAngleDeg;
+        return kAngleDeg + (90 - mHoodAngle);
     }
 
     @Override
