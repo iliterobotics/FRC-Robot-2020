@@ -82,6 +82,10 @@ public class CSVLogger {
 
     public void dump(){
         run();
+        mExService.submit(this::cleanOutAll);
+    }
+    
+    private void cleanOutAll() {
         for ( CSVWriter cw : mCSVWriters ) {
             cw.flush();
         }

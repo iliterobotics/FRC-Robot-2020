@@ -107,7 +107,7 @@ public class CSVWriter {
             try{
                 bw.get().flush();
             } catch ( Exception e ) {
-                mLog.error("We've got Issues");
+                mLog.debug("Could not successfully flush CSVWriter: " + getMetaDataOfAssociatedCodex().getEnum().getSimpleName());
             }
         }
     }
