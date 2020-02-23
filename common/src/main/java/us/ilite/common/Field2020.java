@@ -24,7 +24,7 @@ public class Field2020 {
     }
 
     public enum Distances{
-        INITIATION_LINE_TO_COLOR_WHEEL(10);
+        INITIATION_LINE_TO_COLOR_WHEEL(500);
 
         public double mDistance;
 
