@@ -29,15 +29,14 @@ public class OurTrenchController extends BaseAutonController {
     @Override
     protected void updateImpl(double pNow) {
         db.drivetrain.set(STATE, Enums.EDriveState.PERCENT_OUTPUT);
-        db.drivetrain.set( DESIRED_THROTTLE_PCT , 1.0);
-        db.drivetrain.set( DESIRED_TURN_PCT , 1.0);
+        db.drivetrain.set( DESIRED_THROTTLE_PCT , 0.75);
         if (isAtDistance(mTargetDistance)){
             stopDrivetrain(pNow);
             mIsFirstLegDone = true;
         }
         activateSerializer(pNow);
         setIntakeArmEnabled(pNow, true);
-        initiateAllModules();
+//        initiateAllModules();
     }
 
     public Distance getDistance() {
