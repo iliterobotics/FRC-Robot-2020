@@ -69,7 +69,7 @@ public class FlywheelModule extends Module {
             .p(0.05)
             // https://www.chiefdelphi.com/t/falcon-500-closed-loop-velocity/378170/9
             // Converts the 0.018 Vs/rad to 0.070617 for kF
-            .f(0.070617)
+            .f(0.047078)
             // This was experimentally determined
 //            .f(0.0575)
 //            .kA(0.00165)
