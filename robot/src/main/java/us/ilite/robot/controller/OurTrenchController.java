@@ -30,9 +30,9 @@ public class OurTrenchController extends BaseAutonController {
             stopDrivetrain(pNow);
             mIsFirstLegDone = true;
         }
-        activateSerializer(pNow);
-        setIntakeArmEnabled(pNow, true);
-        initiateAllModules();
+//        activateSerializer(pNow);
+//        setIntakeArmEnabled(pNow, true);
+//        initiateAllModules();
     }
 
     public Distance getDistance() {
