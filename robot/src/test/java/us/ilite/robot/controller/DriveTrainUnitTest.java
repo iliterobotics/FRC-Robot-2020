@@ -48,7 +48,7 @@ public class DriveTrainUnitTest extends BaseTest {
         ctrl.update(0.0);
         Assert.assertTrue(db.drivetrain.isSet(DESIRED_TURN_PCT));
         Assert.assertTrue(db.drivetrain.isSet(DESIRED_THROTTLE_PCT));
-        Assert.assertTrue(db.drivetrain.get(STATE, EDriveState.class) == EDriveState.VELOCITY);
+        Assert.assertTrue(db.drivetrain.get(STATE, Enums.EDriveState.class) == Enums.EDriveState.VELOCITY);
         System.out.println(db.drivetrain.toVerboseString());
     }
 
