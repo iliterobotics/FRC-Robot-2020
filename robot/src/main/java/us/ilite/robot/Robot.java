@@ -45,6 +45,7 @@ public class Robot extends TimedRobot {
     private DriveModule mDrive;
     private Limelight mLimelight;
     private PowerCellModule mIntake;
+    private FlywheelModule mShooter;
 //    private RawLimelight mRawLimelight;
 //    private DJSpinnerModule mDJSpinnerModule;
 //    private LEDControl mLEDControl;
@@ -74,7 +75,7 @@ public class Robot extends TimedRobot {
         mOI = new OperatorInput();
         mDrive = new DriveModule();
 //        mLEDControl = new LEDControl();
-        mShooter = new FlywheelModule();
+//        mShooter = new FlywheelModule();
         mIntake = new PowerCellModule();
         mLimelight = new Limelight();
 //        mRawLimelight = new RawLimelight();
@@ -151,6 +152,11 @@ public class Robot extends TimedRobot {
             mCSVLogger.start();
         }
 
+        mRunningModules.clearModules();
+        mRunningModules.addModule(mOI);
+//        mRunningModules.addModule(mShooter);
+        mRunningModules.addModule(mDrive);
+        mRunningModules.addModule(mIntake);
         MODE=TELEOPERATED;
         mActiveController = mTestController;
         mActiveController.setEnabled(true);
@@ -199,6 +205,7 @@ public class Robot extends TimedRobot {
         mRunningModules.clearModules();
         mRunningModules.addModule(mOI);
 //        mRunningModules.addModule(mLimelight);
+//        mRunningModules.addModule(mShooter);
         mRunningModules.addModule(mDrive);
 //        mRunningModules.addModule(mHanger);
 //        mRunningModules.addModule(mIntake);

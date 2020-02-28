@@ -8,16 +8,15 @@ import static com.revrobotics.ControlType.*;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import us.ilite.common.Distance;
+import us.ilite.common.Field2020;
 import us.ilite.common.config.Settings;
 import us.ilite.common.lib.control.PIDController;
 import us.ilite.common.lib.control.ProfileGains;
-import us.ilite.common.lib.util.Conversions;
 import us.ilite.common.lib.util.Units;
 import us.ilite.common.types.ELimelightData;
 import us.ilite.common.types.EMatchMode;
 
-import static us.ilite.common.types.ELimelightData.TV;
-import static us.ilite.common.types.ELimelightData.TX;
+import static us.ilite.common.types.ELimelightData.TARGET_ID;
 import static us.ilite.common.types.drive.EDriveData.*;
 
 import us.ilite.common.types.sensor.EGyro;
@@ -87,7 +86,6 @@ public class DriveModule extends Module {
 			.maxAccel(kDriveMaxAccel_simulated.feet() / kDriveNEOVelocityFactor / 1.2 * 0.8)
 			.slot(VELOCITY_PID_SLOT)
 			.velocityConversion(kDriveNEOVelocityFactor);
-
 	public static ProfileGains kTurnToProfileGains = new ProfileGains().f(0.085);
 	public static double kTurnSensitivity = 0.85;
 
@@ -174,6 +172,13 @@ public class DriveModule extends Module {
 		mRightMaster.burnFlash();
 		mRightFollower.burnFlash();
 
+
+		mYawPid = new PIDController(kYawGains,
+				-kMaxDegreesPerCycle,
+				kMaxDegreesPerCycle,
+				Settings.kControlLoopPeriod);
+		mYawPid.setOutputRange(-1, 1);
+
 	}
 
 	@Override
@@ -189,7 +194,6 @@ public class DriveModule extends Module {
 									Settings.kControlLoopPeriod);
 		mYawPid.setOutputRange(-1, 1);
 		mYawPid.reset();
-
 		mStartHoldingPosition = false;
 		mLeftHoldSetpoint = 0.0;
 		mRightHoldSetpoint = 0.0;
@@ -223,7 +227,7 @@ public class DriveModule extends Module {
 	@Override
 	public void setOutputs(double pNow) {
 		EDriveState mode = db.drivetrain.get(STATE, EDriveState.class);
-		// Do this to prevent wonkiness while transitioning autonomous to tele op
+		// Do this to prevent wonkiness while transitioning autonomous to teleop
 		if(mode == null) return;
 		SmartDashboard.putNumber("Drive module state", mode.ordinal());
 		double turn = db.drivetrain.get(DESIRED_TURN_PCT);
@@ -256,11 +260,12 @@ public class DriveModule extends Module {
 				}
 				break;
 			case TARGET_ANGLE_LOCK:
-				RobotCodex<ELimelightData> targetData = Robot.DATA.limelight;
-				double pidOutput = 0;
-				if(mTargetAngleLockPid != null && targetData != null && targetData.isSet(TV) && targetData.isSet(TX)) {
+				RobotCodex<ELimelightData> targetData = Robot.DATA.goaltracking;
+				targetData.set(ELimelightData.TARGET_ID, Field2020.FieldElement.TARGET.id());
+				double pidOutput;
+				if(mTargetAngleLockPid != null && targetData != null && targetData.isSet(ELimelightData.TV) && targetData.isSet(ELimelightData.TX)) {
 					//if there is a target in the limelight's fov, lock onto target using feedback loop
-					pidOutput = mTargetAngleLockPid.calculate(-1.0 * targetData.get(TX), pNow - mPreviousTime);
+					pidOutput = mTargetAngleLockPid.calculate(-1.0 * targetData.get(ELimelightData.TX), pNow - mPreviousTime);
 					pidOutput = pidOutput + (Math.signum(pidOutput) * Settings.kTargetAngleLockFrictionFeedforward);
 					SmartDashboard.putNumber("Target Angle Lock PID Output", pidOutput);
 					db.drivetrain.set(DESIRED_TURN_PCT, pidOutput);
