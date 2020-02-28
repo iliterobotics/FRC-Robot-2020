@@ -24,8 +24,8 @@ public class YoinkController extends BaseAutonController {
     public void updateImpl(double pNow) {
         SmartDashboard.putNumber("INDEX", BobUtils.getIndexForCumulativeTime(mActivePath, pNow, mPathStartTime));
         super.updateImpl(pNow);
-//        setIntakeArmEnabled(pNow, true);
-//        activateSerializer(pNow);
+        setIntakeArmEnabled(pNow, true);
+        activateSerializer(pNow);
 
         if (BobUtils.isFinished(pNow, mYoinkTo, mPathStartTime)) {
             if (!mHasReversed) {
