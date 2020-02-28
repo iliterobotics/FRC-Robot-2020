@@ -36,7 +36,7 @@ public class OurTrenchController extends BaseAutonController {
         }
         activateSerializer(pNow);
         setIntakeArmEnabled(pNow, true);
-//        initiateAllModules();
+        initiateAllModules();
     }
 
     public Distance getDistance() {
@@ -52,14 +52,7 @@ public class OurTrenchController extends BaseAutonController {
     private void initiateAllModules(){
         Enums.FlywheelSpeeds flywheelState = Enums.FlywheelSpeeds.FAR;
         if (Field2020.canHitInnerGoal(tempCalcAngleToInnerGoal() , getDistance())){
-            setFlywheelClosedLoop(flywheelState);
-            if (isFlywheelUpToSpeed()) {
-                setFeederClosedLoop(flywheelState);
-                if (isFeederUpToSpeed()) {
-                    db.powercell.set(EPowerCellData.SET_V_pct, 0.6);
-                    db.powercell.set(EPowerCellData.SET_H_pct, 0.5);
-                }
-            }
+            startShootingLogic(flywheelState);
         }
     }
 
