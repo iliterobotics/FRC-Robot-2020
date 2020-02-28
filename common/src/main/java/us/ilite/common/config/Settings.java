@@ -75,10 +75,10 @@ public class Settings {
             public static int kFalconFollowerId = 14;
 
             // ===== 2019 Drive =====
-//            public static  int kDriveLeftMaster = 1;
-//            public static int kDriveLeftFollower = 3;
-//            public static  int kDriveRightMaster = 2;
-//            public static int kDriveRightFollower = 4;
+            public static  int kDriveLeftMaster = 1;
+            public static int kDriveLeftFollower = 3;
+            public static  int kDriveRightMaster = 2;
+            public static int kDriveRightFollower = 4;
 
             // ==== BunnyBot Drive ====
 //            public static int kDriveRightMaster = 6;
