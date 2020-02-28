@@ -44,7 +44,7 @@ public class OurTrenchController extends BaseAutonController {
                 (Robot.DATA.drivetrain.get(L_ACTUAL_POS_FT) +
                         Robot.DATA.drivetrain.get(R_ACTUAL_POS_FT)) / 2.0);
     }
-//
+
     private boolean isAtDistance(Distance pTargetDistance){
         return getDistance().inches() >= pTargetDistance.inches();
     }
