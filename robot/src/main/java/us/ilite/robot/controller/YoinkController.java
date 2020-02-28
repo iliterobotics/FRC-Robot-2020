@@ -13,7 +13,6 @@ public class YoinkController extends BaseAutonController {
     private YoinkTo mYoinkTo = new YoinkTo();
     private YoinkFrom mYoinkFrom = new YoinkFrom();
     private boolean mHasReversed;
-    private double mIntakingCount = 1 / .02;
     private double mYoinkFromStartTime;
 
     public YoinkController() {
@@ -29,15 +28,13 @@ public class YoinkController extends BaseAutonController {
 //        activateSerializer(pNow);
 
         if (BobUtils.isFinished(pNow, mYoinkTo, mPathStartTime)) {
-            if (mIntakingCount <= 0 && !mHasReversed) {
+            if (!mHasReversed) {
                 setNewActivePath(mYoinkFrom, true);
                 mYoinkFromStartTime = pNow;
                 mHasReversed = true;
 
                 // Update again since path has changed, follows process of BaseAutonController
                 super.updateImpl(pNow);
-            } else {
-                mIntakingCount--;
             }
             if (BobUtils.isFinished(pNow, mYoinkFrom, mYoinkFromStartTime)) {
                 setTargetTracking(true);
