@@ -271,7 +271,6 @@ public class DriveModule extends Module {
 					db.drivetrain.set(DESIRED_TURN_PCT, pidOutput);
 					turn = db.drivetrain.get(DESIRED_TURN_PCT);
 				}
-				SmartDashboard.putNumber("Target Angle Lock PID Output", pidOutput);
 			case VELOCITY:
 				mStartHoldingPosition = false;
 				mYawPid.setSetpoint(db.drivetrain.get(DESIRED_TURN_PCT) * kMaxDegreesPerCycle);
