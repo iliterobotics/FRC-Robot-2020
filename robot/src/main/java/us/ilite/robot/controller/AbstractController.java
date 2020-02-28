@@ -69,6 +69,12 @@ public abstract class AbstractController {
         }
     }
 
+    protected final void resetSerializerState() {
+        mEntryLatch.reset();
+        mSecondaryLatch.reset();
+        mNumBalls = 0;
+    }
+
 
     /**
      * Activates the serializer based upon the beam breaker states
@@ -143,6 +149,19 @@ public abstract class AbstractController {
         db.flywheel.set(TARGET_HOOD_ANGLE, pSpeed.angle);
     }
 
+    protected void firingSequence(FlywheelSpeeds speed) {
+        setFlywheelClosedLoop(speed);
+        if (isFlywheelUpToSpeed()) {
+            db.flywheel.set(SET_FEEDER_rpm, speed.feeder);
+            if (isFeederUpToSpeed()) {
+                db.powercell.set(SET_V_pct, 0.5);
+                db.powercell.set(SET_H_pct, 0.5);
+            } else {
+                db.powercell.set(SET_V_pct, 0);
+                db.powercell.set(SET_H_pct, 0);
+            }
+        }
+    }
 
     protected boolean isFlywheelUpToSpeed() {
         return db.flywheel.get(SET_BALL_VELOCITY_ft_s) > 0.0 &&

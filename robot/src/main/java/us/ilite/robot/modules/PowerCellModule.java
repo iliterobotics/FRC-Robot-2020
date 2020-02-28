@@ -118,6 +118,7 @@ public class PowerCellModule extends Module {
         mIntakePivotEncoder = new CANEncoder(mIntakePivot);
         mIntakeRollerEncoder = mIntakeRoller.getEncoder();
         mIntakePivotAbsoluteEncoder = new DutyCycleEncoder(0);
+        mIntakePivotEncoder.setPosition(0.0);
 
         mIntakePivotCtrl = mIntakePivot.getPIDController();
         HardwareUtils.setGains(mIntakePivotCtrl, mIntakePivotDownGains);
@@ -129,7 +130,7 @@ public class PowerCellModule extends Module {
 //        HardwareUtils.setGains(mIntakePivotEncoder, mIntakePivotUpGains);
         HardwareUtils.setGains(mIntakePivotCtrl, mIntakePivotDownGains);
 //        HardwareUtils.setGains(mIntakePivotEncoder, mIntakePivotDownGains);
-        mIntakePivotEncoder.setPosition(0.0);
+
         mIntakePivotCtrl.setOutputRange(0.0, 95.0);
         SmartDashboard.putNumber("Rotation Conversion (deg)", mIntakePivotDownGains.POSITION_CONVERSION_FACTOR);
         SmartDashboard.putNumber("Max Rotation Speed (deg/s)", kMaxIntakePivotVelocityDeg_s * kPivotVelocityConversion);
@@ -150,10 +151,10 @@ public class PowerCellModule extends Module {
         db.powercell.set(PIVOT_ABSOLUTE_ENCODER_RAW, mIntakePivotAbsoluteEncoder.getDistance());
 
         if(db.powercell.get(DESIRED_AMOUNT_OF_SENSORS_BROKEN) >= 3.0){
-            db.powercell.set(DESIRED_AMOUNT_OF_SENSORS_BROKEN , (db.powercell.get(CURRENT_AMOUNT_OF_SENSORS_BROKEN )) + 1)  ;
+            db.powercell.set(DESIRED_AMOUNT_OF_SENSORS_BROKEN , (db.powercell.get(CURRENT_AMOUNT_OF_SENSORS_BROKEN )) + 1);
         }
         else{
-            db.powercell.set(DESIRED_AMOUNT_OF_SENSORS_BROKEN , 3)  ;
+            db.powercell.set(DESIRED_AMOUNT_OF_SENSORS_BROKEN , 3);
         }
 
 //        double currentSensorsBroken = db.powercell.get(EPowerCellData.CURRENT_AMOUNT_OF_SENSORS_BROKEN);

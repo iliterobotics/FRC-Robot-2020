@@ -254,10 +254,14 @@ public class TestController extends BaseManualController {
             activateSerializer(pNow);
         } else if (db.operatorinput.isSet(InputMap.OPERATOR.INTAKE_REVERSE) || flywheelinput.isSet(InputMap.FLYWHEEL.REVERSE_INTAKE)) {
             db.powercell.set(INTAKE_STATE, EArmState.STOW);
+            db.powercell.set(SET_INTAKE_VEL_ft_s, EIntakeState.REVERSE);
             reverseSerializer(pNow);
         } else if (db.operatorinput.isSet(InputMap.OPERATOR.INTAKE_STOW) || flywheelinput.isSet(InputMap.FLYWHEEL.INTAKE_STOW)) {
             setIntakeArmEnabled(pNow, false);
             activateSerializer(pNow);
+        } else if (db.operatorinput.isSet(InputMap.OPERATOR.BEGIN_HANG)) {
+            db.powercell.set(INTAKE_STATE, EArmState.CLIMB);
+            setIntakeArmEnabled(pNow, false);
         } else {
             // TODO - only enable once we have set the hold gains
 //            db.powercell.set(INTAKE_STATE, PowerCellModule.EArmState.HOLD);

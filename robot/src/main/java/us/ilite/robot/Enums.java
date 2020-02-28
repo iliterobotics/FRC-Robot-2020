@@ -172,7 +172,9 @@ public class Enums {
         OUT(95.0, 1),
         // TODO - fix to UP slot
         STOW(0.0, 1),
-        HOLD(0.0, 1);
+        HOLD(0.0, 1),
+        CLIMB(30, 1),
+        CURRENT_LIMITING(80, 1);
 
         public double angle;
         public int slot;
