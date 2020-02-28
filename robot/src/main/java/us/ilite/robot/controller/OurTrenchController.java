@@ -36,7 +36,7 @@ public class OurTrenchController extends BaseAutonController {
         }
         activateSerializer(pNow);
         setIntakeArmEnabled(pNow, true);
-        initiateAllModules();
+        initiateShooter();
     }
 
     public Distance getDistance() {
@@ -49,10 +49,22 @@ public class OurTrenchController extends BaseAutonController {
         return getDistance().inches() >= pTargetDistance.inches();
     }
 
-    private void initiateAllModules(){
+    private boolean canHitInnerGoal() {
+        return Field2020.canHitInnerGoal(tempCalcAngleToInnerGoal() , Distance.fromFeet(db.limelight.get(ELimelightData.CALC_DIST_TO_TARGET))); //TODO - Units??
+    }
+
+    private void initiateShooter(){
         Enums.FlywheelSpeeds flywheelState = Enums.FlywheelSpeeds.FAR;
-        if (Field2020.canHitInnerGoal(tempCalcAngleToInnerGoal() , getDistance())){
-            startShootingLogic(flywheelState);
+        if (canHitInnerGoal()){
+            setTargetTracking(true);
+            setFlywheelClosedLoop(flywheelState);
+            if (isFlywheelUpToSpeed()) {
+                setFeederClosedLoop(flywheelState);
+                if (isFeederUpToSpeed()) {
+                    db.powercell.set(EPowerCellData.SET_V_pct, 0.6);
+                    db.powercell.set(EPowerCellData.SET_H_pct, 0.5);
+                }
+            }
         }
     }
 
