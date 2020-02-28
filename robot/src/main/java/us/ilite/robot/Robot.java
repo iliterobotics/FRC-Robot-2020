@@ -49,7 +49,6 @@ public class Robot extends TimedRobot {
 //    private DJSpinnerModule mDJSpinnerModule;
 //    private LEDControl mLEDControl;
     private SimulationModule mSimulation;
-    private FlywheelModule mShooter;
 
 //    private PowerDistributionPanel pdp = new PowerDistributionPanel(Settings.Hardware.CAN.kPDP);
 
@@ -180,7 +179,6 @@ public class Robot extends TimedRobot {
     public void disabledPeriodic() {
         mOI.readInputs(0d);
         mDrive.readInputs(0d);
-        mShooter.readInputs(0d);
         mIntake.readInputs(0d);
         Shuffleboard.update();
     }
@@ -201,7 +199,6 @@ public class Robot extends TimedRobot {
         mRunningModules.clearModules();
         mRunningModules.addModule(mOI);
 //        mRunningModules.addModule(mLimelight);
-        mRunningModules.addModule(mShooter);
         mRunningModules.addModule(mDrive);
 //        mRunningModules.addModule(mHanger);
 //        mRunningModules.addModule(mIntake);
