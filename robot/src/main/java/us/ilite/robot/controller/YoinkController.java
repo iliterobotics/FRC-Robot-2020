@@ -44,14 +44,7 @@ public class YoinkController extends BaseAutonController {
                 Enums.FlywheelSpeeds flywheelState = Enums.FlywheelSpeeds.CLOSE;
                 setTargetTracking(true);
                 if (Field2020.canHitInnerGoal(tempCalcAngleToInnerGoal(), Distance.fromFeet(db.goaltracking.get(ELimelightData.CALC_DIST_TO_TARGET)))) {
-                    setFlywheelClosedLoop(flywheelState);
-                    if (isFlywheelUpToSpeed()) {
-                        setFeederClosedLoop(flywheelState);
-                        if (isFeederUpToSpeed()) {
-                            db.powercell.set(EPowerCellData.SET_V_pct, 0.6);
-                            db.powercell.set(EPowerCellData.SET_H_pct, 0.5);
-                        }
-                    }
+                    startShootingLogic(flywheelState);
                 }
             }
         }
