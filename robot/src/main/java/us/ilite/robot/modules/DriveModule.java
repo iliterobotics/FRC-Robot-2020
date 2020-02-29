@@ -12,6 +12,7 @@ import us.ilite.common.Field2020;
 import us.ilite.common.config.Settings;
 import us.ilite.common.lib.control.PIDController;
 import us.ilite.common.lib.control.ProfileGains;
+import us.ilite.common.lib.util.Conversions;
 import us.ilite.common.lib.util.Units;
 import us.ilite.common.types.ELimelightData;
 import us.ilite.common.types.EMatchMode;
@@ -290,6 +291,10 @@ public class DriveModule extends Module {
 			case PERCENT_OUTPUT:
 				mLeftMaster.set(throttle+turn);
 				mRightMaster.set(throttle-turn);
+				break;
+			case SMART_MOTION:
+				mLeftCtrl.setReference(db.drivetrain.get(L_DESIRED_POS_FT), kSmartMotion, POSITION_PID_SLOT, 0); //TODO - feet to rotation conversions
+				mRightCtrl.setReference(db.drivetrain.get(R_DESIRED_POS_FT), kSmartMotion, POSITION_PID_SLOT, 0);
 				break;
 		}
 	}
