@@ -47,9 +47,11 @@ public class FlywheelModule extends Module {
     // Production bot 0.00175 min, 0.74664 max (normalized from AnalogPotentiometer)
 //    private static final double kHoodReadingRange = 0.74664 - 0.00175;
     // Practice & Production have the same min reading
-    private static final double kHoodMinReading = 0.00175;
+//    private static final double kHoodMinReading = 0.00175;  //Practice Bot
+    private static final double kHoodMinReading = 0.0264;
     // Max reading taken from practice bot while connected to MAX - needs updating on production bot
-    private static final double kHoodReadingRange = 1.637 - kHoodMinReading;
+//    private static final double kHoodReadingRange = 1.637 - kHoodMinReading; //Practice bot
+    private static final double kHoodReadingRange = 1.672 - kHoodMinReading;
     private static final double kMinShotDegrees = 90.0 - 66.0;
     private static final double kMaxShotDegrees = 90.0 - 14.0;
     private static final double kHoodAngleRange = kMaxShotDegrees - kMinShotDegrees;
