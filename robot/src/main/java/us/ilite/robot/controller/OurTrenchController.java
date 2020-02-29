@@ -31,6 +31,8 @@ public class OurTrenchController extends BaseAutonController {
         db.drivetrain.set(STATE, Enums.EDriveState.SMART_MOTION);
         db.drivetrain.set(L_DESIRED_POS_FT , 10);
         db.drivetrain.set(R_DESIRED_POS_FT , 10);
+//        db.drivetrain.set(STATE, Enums.EDriveState.VELOCITY);
+//        db.drivetrain.set(DESIRED_THROTTLE_PCT, .75);
         if (isAtDistance(mTargetDistance)){
             stopDrivetrain(pNow);
             mIsFirstLegDone = true;

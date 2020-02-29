@@ -293,8 +293,10 @@ public class DriveModule extends Module {
 				mRightMaster.set(throttle-turn);
 				break;
 			case SMART_MOTION:
-				mLeftCtrl.setReference(db.drivetrain.get(L_DESIRED_POS_FT), kSmartMotion, POSITION_PID_SLOT, 0); //TODO - feet to rotation conversions
-				mRightCtrl.setReference(db.drivetrain.get(R_DESIRED_POS_FT), kSmartMotion, POSITION_PID_SLOT, 0);
+				double leftSetpoint = db.drivetrain.get(L_DESIRED_POS_FT);
+				double rightSetpoint = db.drivetrain.get(R_DESIRED_POS_FT);
+				mLeftCtrl.setReference(leftSetpoint, kSmartMotion, POSITION_PID_SLOT, 0); //TODO - feet to rotation conversions
+				mRightCtrl.setReference(rightSetpoint, kSmartMotion, POSITION_PID_SLOT, 0);
 				break;
 		}
 	}
