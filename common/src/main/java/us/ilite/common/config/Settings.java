@@ -87,10 +87,10 @@ public class Settings {
 //            public static int kDriveRightFollower = 4;
 
             // ==== BunnyBot Drive ====
-            public static int kDriveRightMaster = 6;
-            public static int kDriveRightFollower = 4;
-            public static int kDriveLeftMaster = 7;
-            public static int kDriveLeftFollower = 5;
+//            public static int kDriveRightMaster = 6;
+//            public static int kDriveRightFollower = 4;
+//            public static int kDriveLeftMaster = 7;
+//            public static int kDriveLeftFollower = 5;
         }
 
         public static class Analog {
