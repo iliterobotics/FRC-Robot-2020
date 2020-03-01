@@ -84,11 +84,6 @@ public class BaseAutonController extends AbstractController {
         }
     }
 
-    protected void setTargetTracking(boolean pTargetTracking) {
-        mIsTargetTracking = pTargetTracking;
-        db.drivetrain.set(EDriveData.STATE, Enums.EDriveState.TARGET_ANGLE_LOCK);
-    }
-
     private static final void e() {
         System.out.println("================================================");
     }

@@ -198,6 +198,11 @@ public abstract class AbstractController {
         }
     }
 
+    protected void setTurretTracking(Field2020.FieldElement trackedElement) {
+        db.goaltracking.set(ELimelightData.TARGET_ID, trackedElement.id());
+        db.flywheel.set(EShooterSystemData.TURRET_CONTROL, Enums.TurretControlType.TARGET_LOCKING);
+    }
+
     protected boolean isFlywheelUpToSpeed() {
         return db.flywheel.get(SET_BALL_VELOCITY_ft_s) > 0.0 &&
                 db.flywheel.get(SET_BALL_VELOCITY_ft_s) >= db.flywheel.get(BALL_VELOCITY_ft_s) - 2.0;

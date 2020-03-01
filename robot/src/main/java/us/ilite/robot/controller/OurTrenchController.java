@@ -31,13 +31,13 @@ public class OurTrenchController extends BaseAutonController {
         db.drivetrain.set(STATE, Enums.EDriveState.SMART_MOTION);
         db.drivetrain.set(L_DESIRED_POS_FT , 10);
         db.drivetrain.set(R_DESIRED_POS_FT , 10);
+        activateSerializer(pNow);
+        setIntakeArmEnabled(pNow, true);
+        initiateShooter();
         if (isAtDistance(mTargetDistance)){
             stopDrivetrain(pNow);
             mIsFirstLegDone = true;
         }
-        activateSerializer(pNow);
-        setIntakeArmEnabled(pNow, true);
-        initiateShooter();
     }
 
     public Distance getDistance() {
@@ -57,7 +57,6 @@ public class OurTrenchController extends BaseAutonController {
     private void initiateShooter(){
         Enums.FlywheelSpeeds flywheelState = Enums.FlywheelSpeeds.FAR;
         if (canHitInnerGoal()){
-            setTargetTracking(true);
             firingSequence(flywheelState);
         }
     }
