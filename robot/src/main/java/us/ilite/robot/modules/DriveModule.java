@@ -12,8 +12,6 @@ import us.ilite.common.Field2020;
 import us.ilite.common.config.Settings;
 import us.ilite.common.lib.control.PIDController;
 import us.ilite.common.lib.control.ProfileGains;
-import us.ilite.common.lib.util.Conversions;
-import us.ilite.common.lib.util.Units;
 import us.ilite.common.types.ELimelightData;
 import us.ilite.common.types.EMatchMode;
 
@@ -72,10 +70,20 @@ public class DriveModule extends Module {
 	// =============================================================================
 	private static final int VELOCITY_PID_SLOT = 1;
 	private static final int POSITION_PID_SLOT = 2;
+	private static final int SMART_MOTION_PID_SLOT = 3;
 	public static ProfileGains dPID = new ProfileGains()
-			.p(1.0).maxVelocity(kDriveTrainMaxVelocityRPM * Settings.Input.kMaxAllowedVelocityMultiplier)
-			.maxAccel(56760d)
+//			.p(5.0e-4)
+			.maxVelocity(kDriveTrainMaxVelocityRPM * Settings.Input.kMaxAllowedVelocityMultiplier)
+			.f(0.00015)
+			.maxAccel(5676d)
 			.slot(POSITION_PID_SLOT)
+			.velocityConversion(kDriveNEOPositionFactor);
+	public static ProfileGains smartMotionPID = new ProfileGains()
+			.p(.00025)
+			.f(0.00015)
+			.maxVelocity(kDriveTrainMaxVelocityRPM)
+			.maxAccel(1000d)
+			.slot(SMART_MOTION_PID_SLOT)
 			.velocityConversion(kDriveNEOPositionFactor);
 	public static ProfileGains vPID = new ProfileGains()
 			.f(0.00015)
@@ -166,6 +174,8 @@ public class DriveModule extends Module {
 		HardwareUtils.setGains(mRightCtrl, vPID);
 		HardwareUtils.setGains(mLeftCtrl, dPID);
 		HardwareUtils.setGains(mRightCtrl, dPID);
+		HardwareUtils.setGains(mLeftCtrl, smartMotionPID);
+		HardwareUtils.setGains(mRightCtrl, smartMotionPID);
 
 		//TODO - we want to do use our conversion factor calculated above, but that requires re-turning of F & P
 		mLeftEncoder.setPositionConversionFactor(1d);
@@ -293,10 +303,8 @@ public class DriveModule extends Module {
 				mRightMaster.set(throttle-turn);
 				break;
 			case SMART_MOTION:
-				double leftSetpoint = db.drivetrain.get(L_DESIRED_POS_FT);
-				double rightSetpoint = db.drivetrain.get(R_DESIRED_POS_FT);
-				mLeftCtrl.setReference(leftSetpoint, kSmartMotion, POSITION_PID_SLOT, 0); //TODO - feet to rotation conversions
-				mRightCtrl.setReference(rightSetpoint, kSmartMotion, POSITION_PID_SLOT, 0);
+				mLeftCtrl.setReference( db.drivetrain.get(L_DESIRED_POS_FT) / kDriveNEOPositionFactor, kSmartMotion, POSITION_PID_SLOT, 0 );
+				mRightCtrl.setReference( db.drivetrain.get(R_DESIRED_POS_FT) / kDriveNEOPositionFactor, kSmartMotion, POSITION_PID_SLOT, 0 );
 				break;
 		}
 	}
