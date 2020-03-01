@@ -8,11 +8,12 @@ import static us.ilite.common.types.EPowerCellData.*;
 import static us.ilite.common.types.EShooterSystemData.*;
 import static us.ilite.common.types.drive.EDriveData.*;
 
-import us.ilite.common.lib.util.Latch;
 import us.ilite.common.lib.util.XorLatch;
-import us.ilite.common.types.drive.EDriveData;
+import us.ilite.common.types.ELimelightData;
+import us.ilite.common.types.EShooterSystemData;
 import us.ilite.robot.Enums;
 import us.ilite.robot.Robot;
+
 import static us.ilite.robot.Enums.*;
 
 import java.util.List;
@@ -59,14 +60,15 @@ public abstract class AbstractController {
     protected void setIntakeArmEnabled(double pNow, boolean pEnabled) {
         if(pEnabled) {
             double speed = Math.max(db.drivetrain.get(L_ACTUAL_VEL_FT_s), db.drivetrain.get(R_ACTUAL_VEL_FT_s));
-            if(speed <= 1.0) {
-                speed = 0.3;
-            }
+//            if(speed <= 1.0) {
+//                speed = 3.0;
+//            }
+            speed += 3.0;
             db.powercell.set(INTAKE_STATE, EArmState.OUT);
-            db.powercell.set(SET_INTAKE_VEL_ft_s, kIntakeRollerPower_on);
+            db.powercell.set(SET_INTAKE_VEL_ft_s, speed);
         } else {
             db.powercell.set(INTAKE_STATE, EArmState.STOW);
-            db.powercell.set(SET_INTAKE_VEL_ft_s, kIntakeRollerPower_off);
+            db.powercell.set(SET_INTAKE_VEL_ft_s, 0.0);
         }
     }
 
@@ -150,21 +152,48 @@ public abstract class AbstractController {
         db.flywheel.set(TARGET_HOOD_ANGLE, pSpeed.angle);
     }
 
+    protected final void setHood(FlywheelSpeeds pSpeed) {
+        db.flywheel.set(TARGET_HOOD_ANGLE, pSpeed.angle);
+    }
+
     protected final void setFeederClosedLoop(Enums.FlywheelSpeeds pFlywheelSpeed) {
         db.flywheel.set(FEEDER_OUTPUT_OPEN_LOOP, pFlywheelSpeed.feeder);
         db.flywheel.set(SET_FEEDER_rpm, pFlywheelSpeed.feeder * 11000.0);
     }
 
+    protected void firingSequence(FlywheelSpeeds speed, Field2020.FieldElement trackedElement) {
+        setHood(speed);
+        if (isHoodAtCorrectAngle(speed)) {
+            db.goaltracking.set(ELimelightData.TARGET_ID, trackedElement.id());
+            db.flywheel.set(EShooterSystemData.TURRET_CONTROL, Enums.TurretControlType.TARGET_LOCKING);
+            if (isTurretAtCorrectAngle()) {
+                setFlywheelClosedLoop(speed);
+                if (isFlywheelUpToSpeed()) {
+                    db.flywheel.set(SET_FEEDER_rpm, speed.feeder);
+                    if (isFeederUpToSpeed()) {
+                        db.powercell.set(SET_V_pct, 0.5);
+                        db.powercell.set(SET_H_pct, 0.5);
+                    } else {
+                        db.powercell.set(SET_V_pct, 0);
+                        db.powercell.set(SET_H_pct, 0);
+                    }
+                }
+            }
+        }
+    }
+
     protected void firingSequence(FlywheelSpeeds speed) {
         setFlywheelClosedLoop(speed);
-        if (isFlywheelUpToSpeed()) {
-            db.flywheel.set(SET_FEEDER_rpm, speed.feeder);
-            if (isFeederUpToSpeed()) {
-                db.powercell.set(SET_V_pct, 0.5);
-                db.powercell.set(SET_H_pct, 0.5);
-            } else {
-                db.powercell.set(SET_V_pct, 0);
-                db.powercell.set(SET_H_pct, 0);
+        if (isHoodAtCorrectAngle(speed)) {
+            if (isFlywheelUpToSpeed()) {
+                db.flywheel.set(SET_FEEDER_rpm, speed.feeder);
+                if (isFeederUpToSpeed()) {
+                    db.powercell.set(SET_V_pct, 0.5);
+                    db.powercell.set(SET_H_pct, 0.5);
+                } else {
+                    db.powercell.set(SET_V_pct, 0);
+                    db.powercell.set(SET_H_pct, 0);
+                }
             }
         }
     }
@@ -177,6 +206,17 @@ public abstract class AbstractController {
     protected boolean isFeederUpToSpeed() {
         return db.flywheel.get(SET_FEEDER_rpm) > 0.0 &&
                 db.flywheel.get(FEEDER_rpm) >= db.flywheel.get(SET_FEEDER_rpm)*0.8;
+    }
+
+    protected boolean isTurretAtCorrectAngle(){
+//        TurretControlType turretControlType = db.flywheel.get(TURRET_CONTROL, TurretControlType.class);
+//        if (turretControlType != TurretControlType.MANUAL) {
+            return db.flywheel.get(IS_TARGET_LOCKED) == 1.0;
+//        }
+//        return true;
+    }
+    protected boolean isHoodAtCorrectAngle(FlywheelSpeeds pSpeed) {
+        return Math.abs(db.flywheel.get(CURRENT_HOOD_ANGLE) - pSpeed.angle) <= 1.0;
     }
 
     protected abstract void updateImpl(double pNow);

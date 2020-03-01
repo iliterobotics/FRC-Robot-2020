@@ -72,7 +72,6 @@ public class InputMap {
         INTAKE_STOW = ELogitech310.RIGHT_TRIGGER_AXIS,
         RESET_INTAKE_COUNT = ELogitech310.BACK,
 
-
         // PUT TEST ITEMS BELOW
         BEGIN_HANG = ELogitech310.LEFT_X_AXIS,
         //RELEASE_HANG = ELogitech310.START,
@@ -82,6 +81,7 @@ public class InputMap {
         //SHOOT_FLYWHEEL = ELogitech310.A_BTN,
         LIMELIGHT_SEARCH = ELogitech310.RIGHT_X_AXIS
         ;
+
     }
 
     // For flywheel tuning, Joystick port 2 (driver's station row 3)
@@ -112,5 +112,12 @@ public class InputMap {
                 LIMELIGHT_LOCK_BALL_TRI = ELogitech310.X_BTN,
                 LIMELIGHT_LOCK_BALL_DUAL = ELogitech310.START
                         ;
+    }
+
+    public static class OPERATOR_REFACTOR {
+        public static final ELogitech310
+                MANUAL_TURRET = ELogitech310.RIGHT_X_AXIS
+
+                ;
     }
 }
