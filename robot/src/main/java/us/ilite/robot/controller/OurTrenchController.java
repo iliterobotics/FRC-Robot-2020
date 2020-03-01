@@ -31,8 +31,6 @@ public class OurTrenchController extends BaseAutonController {
         db.drivetrain.set(STATE, Enums.EDriveState.SMART_MOTION);
         db.drivetrain.set(L_DESIRED_POS_FT , 10);
         db.drivetrain.set(R_DESIRED_POS_FT , 10);
-//        db.drivetrain.set(STATE, Enums.EDriveState.VELOCITY);
-//        db.drivetrain.set(DESIRED_THROTTLE_PCT, .75);
         if (isAtDistance(mTargetDistance)){
             stopDrivetrain(pNow);
             mIsFirstLegDone = true;
@@ -49,7 +47,7 @@ public class OurTrenchController extends BaseAutonController {
     }
 
     private boolean isAtDistance(Distance pTargetDistance){
-        return getDistance().inches() >= pTargetDistance.inches();
+        return getDistance().feet() >= pTargetDistance.feet();
     }
 
     private boolean canHitInnerGoal() {
@@ -66,7 +64,7 @@ public class OurTrenchController extends BaseAutonController {
 
     // TODO - figure out if this is the correct way we'll be targeting
     private Angle tempCalcAngleToInnerGoal() {
-        double thetaGoal = db.limelight.get(ELimelightData.CALC_ANGLE_TO_TARGET);
+        double thetaGoal = db.limelight.get(ELimelightData.TX);
         double distToGoal = db.limelight.get(ELimelightData.CALC_DIST_TO_TARGET); //TODO: Units??
         double b = 29.25 + (distToGoal * Math.cos(thetaGoal));
         double a = distToGoal * Math.sin(thetaGoal);
