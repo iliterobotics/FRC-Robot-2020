@@ -12,7 +12,8 @@ public enum EShooterSystemData {
     CURRENT_TURRET_ANGLE,           //The current angle of the turret (deg)
     DESIRED_TURRET_ANGLE,           //The desired angle of the turret
     MANUAL_TURRET_DIRECTION,
-    TARGET_LOCKING,
+    TURRET_CONTROL,
+    IS_TARGET_LOCKED,
 
     CURRENT_HOOD_ANGLE,             //The current angle of the hood
     TARGET_HOOD_ANGLE,             //The desired angle of the hood
