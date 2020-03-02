@@ -136,10 +136,10 @@ public class Robot extends TimedRobot {
         SmartDashboard.putNumber("AUTON INIT", CLOCK.getCurrentTime());
         mActiveController.setEnabled(true);
         mRunningModules.clearModules();
-        mRunningModules.addModule(mDrive);
-        mRunningModules.addModule(mIntake);
-        mRunningModules.addModule(mShooter);
         mRunningModules.addModule(mLimelight);
+        mRunningModules.addModule(mShooter);
+        mRunningModules.addModule(mIntake);
+        mRunningModules.addModule(mDrive);
         mRunningModules.modeInit(AUTONOMOUS, CLOCK.getCurrentTime());
     }
 
@@ -160,7 +160,7 @@ public class Robot extends TimedRobot {
         mRunningModules.addModule(mDrive);
         mRunningModules.addModule(mIntake);
         MODE=TELEOPERATED;
-        mActiveController = mTestController;
+        mActiveController = mTeleopController;
         mActiveController.setEnabled(true);
     }
 
