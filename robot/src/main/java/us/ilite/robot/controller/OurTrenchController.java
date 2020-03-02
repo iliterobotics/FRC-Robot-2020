@@ -58,6 +58,13 @@ public class OurTrenchController extends BaseAutonController {
         Enums.FlywheelSpeeds flywheelState = Enums.FlywheelSpeeds.FAR;
         if (canHitInnerGoal()){
             firingSequence(flywheelState);
+            if (isFlywheelUpToSpeed()) {
+                setFeederClosedLoop(flywheelState);
+                if (isFeederUpToSpeed()) {
+                    db.powercell.set(EPowerCellData.SET_V_pct, 0.6);
+                    db.powercell.set(EPowerCellData.SET_H_pct, 0.5);
+                }
+            }
         }
     }
 
