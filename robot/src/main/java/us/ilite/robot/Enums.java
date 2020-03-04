@@ -17,7 +17,8 @@ public class Enums {
         TARGET_ANGLE_LOCK,
         HOLD,
         VELOCITY,
-        PERCENT_OUTPUT
+        PERCENT_OUTPUT,
+        SMART_MOTION
     }
 
     // =============================================================================
@@ -71,7 +72,7 @@ public class Enums {
 
     public enum EColorWheelState {
         OFF (0.0),
-        ROTATION (0.2),
+        ROTATION (0.4),
         POSITION (0.2);
 
         public double power;
@@ -105,6 +106,10 @@ public class Enums {
         NONE,
         OPEN_LOOP,
         VELOCITY
+    }
+    public enum TurretControlType {
+        MANUAL,
+        TARGET_LOCKING
     }
 
     /**
@@ -169,7 +174,7 @@ public class Enums {
 
     public enum EArmState {
         NONE(0.0, 0),
-        OUT(95.0, 1),
+        OUT(90.0, 1),
         // TODO - fix to UP slot
         STOW(0.0, 1),
         HOLD(0.0, 1),

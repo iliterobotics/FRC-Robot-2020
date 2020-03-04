@@ -2,6 +2,7 @@ package us.ilite.robot.modules;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.flybotix.hfr.util.log.ILog;
 import com.flybotix.hfr.util.log.Logger;
 import com.revrobotics.*;
@@ -42,6 +43,7 @@ public class PowerCellModule extends Module {
     private CANEncoder mIntakePivotEncoder;
     private DutyCycleEncoder mIntakePivotAbsoluteEncoder;
     private CANEncoder mIntakeRollerEncoder;
+    private CANPIDController mIntakeRollerCtrl;
 
 //    Beam Breakers
     private DigitalBeamSensor mEntryBeam;
@@ -62,7 +64,11 @@ public class PowerCellModule extends Module {
 
     private static final int INTAKE_PIVOT_DOWN_SLOT = 1;
     private static final int INTAKE_PIVOT_UP_SLOT = 2;
+    private static final int INTAKE_ROLLER_SLOT = 1;
 
+    private static final double kIntakeRollerRatio = 12.0 / 30.0 * 22.0 / 36.0;
+    private static final double kIntakeRollerDiameterFeet = 1.5 / 12.0;
+    private static final double kIntakeRollerSpeedConversion = kIntakeRollerRatio * kIntakeRollerDiameterFeet * Math.PI / 60.0;
     // 100:1 AM Sport with 16:36 sprocket reduction
     // We may change this ratio to speed up the arm, so leave the math separated out like this
     private static final double kPivotGearRatio = 1.0/100.0 * 16.0 / 36.0;
@@ -72,12 +78,20 @@ public class PowerCellModule extends Module {
     private static final double kPivotConversion = kPivotGearRatio * 360.0;
     // RPM to degrees / second
     private static final double kPivotVelocityConversion = kPivotConversion / 60.0;
+    private static final double kPivotAngleConversionFactor = 0.0;
     private static final double kMaxIntakePivotVelocityDeg_s = 10.0;
     private static final ProfileGains mIntakePivotDownGains = new ProfileGains()
             .slot(INTAKE_PIVOT_DOWN_SLOT)
             .p(0.00025)
             .maxAccel(9000d)
             .maxVelocity(6000d)
+            ;
+    private static final ProfileGains mIntakeRollerGains = new ProfileGains()
+            .slot(INTAKE_ROLLER_SLOT)
+            .f(0.00015)
+//            .p(0.0001)
+            .maxAccel(9000d)
+            .maxVelocity(11000d)
             ;
 
     // These are PRODUCTION BOT values
@@ -92,14 +106,15 @@ public class PowerCellModule extends Module {
     //Array of beam-breakers (Used when indexing PowerCells)
     private DigitalBeamSensor[] mDigitalBeamSensors;
 
-
     private ILog mLog = Logger.createLog(this.getClass());
 
     public PowerCellModule() {
         mIntakeRoller = SparkMaxFactory.createDefaultSparkMax( Settings.Hardware.CAN.kMAXIntakeRollerId, CANSparkMaxLowLevel.MotorType.kBrushless );
         mIntakeRoller.setInverted(true);
         mIntakeRoller.setIdleMode(CANSparkMax.IdleMode.kCoast);
-        mIntakeRoller.setSmartCurrentLimit(15);
+        mIntakeRoller.setSmartCurrentLimit(40);
+        mIntakeRollerEncoder = mIntakeRoller.getEncoder();
+        mIntakeRollerCtrl = mIntakeRoller.getPIDController();
 
         mConveyorMotorHorizontal = TalonSRXFactory.createDefaultTalon( Settings.Hardware.CAN.kTalonPowerCellSerializer);
         mConveyorMotorVertical = TalonSRXFactory.createDefaultTalon( Settings.Hardware.CAN.kTalonVerticalID );
@@ -116,24 +131,29 @@ public class PowerCellModule extends Module {
         mDigitalBeamSensors = new DigitalBeamSensor[]{mEntryBeam, mSecondaryBeam, mExitBeam};
 
         mIntakePivotEncoder = new CANEncoder(mIntakePivot);
-        mIntakeRollerEncoder = mIntakeRoller.getEncoder();
         mIntakePivotAbsoluteEncoder = new DutyCycleEncoder(0);
         mIntakePivotEncoder.setPosition(0.0);
 
         mIntakePivotCtrl = mIntakePivot.getPIDController();
+
         HardwareUtils.setGains(mIntakePivotCtrl, mIntakePivotDownGains);
+        HardwareUtils.setGains(mIntakeRollerCtrl, mIntakeRollerGains);
+        mIntakeRoller.burnFlash();
+        mIntakePivot.burnFlash();
     }
 
     @Override
     public void modeInit(EMatchMode pMode, double pNow) {
         HardwareUtils.setGains(mIntakePivotCtrl, mIntakePivotUpGains);
 //        HardwareUtils.setGains(mIntakePivotEncoder, mIntakePivotUpGains);
-        HardwareUtils.setGains(mIntakePivotCtrl, mIntakePivotDownGains);
+//        HardwareUtils.setGains(mIntakePivotCtrl, mIntakePivotDownGains);
 //        HardwareUtils.setGains(mIntakePivotEncoder, mIntakePivotDownGains);
-
+        HardwareUtils.setGains(mIntakeRollerCtrl, mIntakeRollerGains);
+        mIntakePivotEncoder.setPosition(0.0);
         mIntakePivotCtrl.setOutputRange(0.0, 95.0);
         SmartDashboard.putNumber("Rotation Conversion (deg)", mIntakePivotDownGains.POSITION_CONVERSION_FACTOR);
         SmartDashboard.putNumber("Max Rotation Speed (deg/s)", kMaxIntakePivotVelocityDeg_s * kPivotVelocityConversion);
+        mIntakeRollerEncoder.setPosition(0.0);
     }
 
     @Override
@@ -143,45 +163,11 @@ public class PowerCellModule extends Module {
 
         db.powercell.set(CURRENT_AMOUNT_OF_SENSORS_BROKEN, List.of(mDigitalBeamSensors).stream().filter(e -> !e.isBroken()).count());
         db.powercell.set(INTAKE_ROLLER_CURRENT, mIntakeRoller.getOutputCurrent());
-        db.powercell.set(INTAKE_VEL_ft_s, mIntakeRollerEncoder.getVelocity());
+        db.powercell.set(INTAKE_VEL_ft_s, mIntakeRollerEncoder.getVelocity() * kIntakeRollerSpeedConversion);
         db.powercell.set(ARM_ANGLE_deg, mIntakePivotEncoder.getPosition() * kPivotConversion);
         db.powercell.set(SERIALIZER_CURRENT, mConveyorMotorHorizontal.getStatorCurrent());
         db.powercell.set(VERTICAL_CURRENT, mConveyorMotorVertical.getStatorCurrent());
         db.powercell.set(INTAKE_PIVOT_CURRENT, mIntakePivot.getOutputCurrent());
-        db.powercell.set(PIVOT_ABSOLUTE_ENCODER_RAW, mIntakePivotAbsoluteEncoder.getDistance());
-
-        if(db.powercell.get(DESIRED_AMOUNT_OF_SENSORS_BROKEN) >= 3.0){
-            db.powercell.set(DESIRED_AMOUNT_OF_SENSORS_BROKEN , (db.powercell.get(CURRENT_AMOUNT_OF_SENSORS_BROKEN )) + 1);
-        }
-        else{
-            db.powercell.set(DESIRED_AMOUNT_OF_SENSORS_BROKEN , 3);
-        }
-
-//        double currentSensorsBroken = db.powercell.get(EPowerCellData.CURRENT_AMOUNT_OF_SENSORS_BROKEN);
-//        if (currentSensorsBroken < 3) {
-//            mEntryBeamNotBrokenCycles++;
-//        } else {
-//            mEntryBeamNotBrokenCycles = 0;
-//    }
-//        db.powercell.set(EPowerCellData.ALL_BEAMS_BROKEN, mEntryBeamNotBrokenCycles < 15);
-
-        if((boolean)brokenArray[0]) {
-            mEntryBeamNotBrokenCycles++;
-        } else {
-            mEntryBeamNotBrokenCycles = 0;
-        }
-
-        if((boolean)brokenArray[1]) {
-            mSecondaryBeamNotBrokenCycles++;
-        } else {
-            mSecondaryBeamNotBrokenCycles = 0;
-        }
-
-        if((boolean)brokenArray[2]) {
-            mExitBeamNotBrokenCycles++;
-        } else {
-            mExitBeamNotBrokenCycles = 0;
-        }
 
         db.powercell.set(ENTRY_BEAM, mEntryBeam.isBroken());
         db.powercell.set(H_BEAM, mSecondaryBeam.isBroken());
@@ -199,7 +185,11 @@ public class PowerCellModule extends Module {
     private void setPivotArm() {
 //        kPivotAbsoluteMin
         if(db.powercell.isSet(INTAKE_STATE)) {
-            mIntakeRoller.set(db.powercell.get(SET_INTAKE_VEL_ft_s));
+//            mIntakeRoller.set(db.powercell.get(SET_INTAKE_VEL_ft_s) / 18.0); // 18ft/s theoretical max
+            double rpm = db.powercell.get(SET_INTAKE_VEL_ft_s) / kIntakeRollerSpeedConversion;
+            SmartDashboard.putNumber("Target Intake Roller RPM", rpm);
+            mIntakeRollerCtrl.setReference(rpm, ControlType.kSmartVelocity, INTAKE_ROLLER_SLOT);
+//            mIntakeRoller.set(0.6);
             EArmState state = db.powercell.get(INTAKE_STATE, EArmState.class);
             switch(state) {
                 case OUT:
@@ -209,7 +199,6 @@ public class PowerCellModule extends Module {
                 default:
                     mIntakePivot.set(0.0);
             }
-            SmartDashboard.putNumber("TARGET ANGLE (deg)", state.angle);
         } else {
             mIntakePivot.set(0.0);
         }
