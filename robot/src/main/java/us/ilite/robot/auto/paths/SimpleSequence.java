@@ -2,12 +2,12 @@ package us.ilite.robot.auto.paths;
 
 import us.ilite.robot.Robot;
 import us.ilite.robot.commands.IAutoCommand;
-
 import static us.ilite.common.types.EPowerCellData.*;
 import static us.ilite.common.types.drive.EDriveData.L_ACTUAL_VEL_FT_s;
 import static us.ilite.common.types.drive.EDriveData.R_ACTUAL_VEL_FT_s;
 import static us.ilite.robot.controller.AbstractController.kIntakeRollerPower_on;
 
+@Deprecated
 public class SimpleSequence implements ISequence {
     private static int beamCounter = 0;
     private static boolean mLastSecondaryBeamBroken = false;
@@ -17,8 +17,8 @@ public class SimpleSequence implements ISequence {
     private double mCurrentDistance = 0;
 
     public static boolean checkBeams(){
-        mSecondaryBeamBroken = Robot.DATA.powercell.get(ENTRY_BEAM) == 1.0;
-        if (mSecondaryBeamBroken && !mLastSecondaryBeamBroken) {
+        mSecondaryBeamBroken = Robot.DATA.powercell.get(EXIT_BEAM) == 1.0;
+        if (mSecondaryBeamBroken&&!mLastSecondaryBeamBroken) {
             beamCounter++;
         }
         mLastSecondaryBeamBroken = mSecondaryBeamBroken;
@@ -71,12 +71,14 @@ public class SimpleSequence implements ISequence {
                     speed = 0.3;
                 }
 //                Robot.DATA.powercell.set(INTAKE_STATE, PowerCellModule.EArmState.OUT);
-                Robot.DATA.powercell.set(DESIRED_INTAKE_VELOCITY_FT_S, kIntakeRollerPower_on);
-                Robot.DATA.powercell.set(DESIRED_H_VELOCITY, 0.5);
-                Robot.DATA.powercell.set(DESIRED_V_VELOCITY, 0.5);
+                Robot.DATA.powercell.set(INTAKE_VEL_ft_s, kIntakeRollerPower_on);
+                Robot.DATA.powercell.set(SET_H_pct, 0.5);
+                Robot.DATA.powercell.set(SET_V_pct ,0.5);
 
                 return checkBeams();
             } else {
+                Robot.DATA.powercell.set(SET_H_pct, 0.0);
+                Robot.DATA.powercell.set(SET_V_pct, 0.0);
 //                Robot.DATA.powercell.set(INTAKE_STATE, PowerCellModule.EArmState.STOW);
             }
             return false;

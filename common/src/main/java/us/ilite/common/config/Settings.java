@@ -10,19 +10,26 @@ import us.ilite.common.lib.control.ProfileGains;
  *  - Field element locations & vision target heights
  */
 public class Settings {
+    public static final String kGroundLimelightNetworkTable = "limelight-bottom";
+    public static final String kFlywheelLimelightNetworkTable = "limelight-top";
 
-    public static double kControlLoopPeriod = 0.01; // seconds
+
+    public static double kControlLoopPeriod = 0.02; // seconds
 
     public static int kSecondsToUpdateCSVLogger = 1; //seconds
     public static int kAcceptableLogFailures = 8;
 
     public static double kNetworkTableUpdateRate = 0.01;
 
+    public static boolean kIsLogging = true; // decide whether or not to log
+
     public static double kDJOutput = .25;
 
     public static int sCODEX_COMMS_PORT = 5805;
 
     public static final String AUTO_PATH_PACKAGE = "us.ilite.robot.auto.paths";
+
+    public static final String CONTROLLER_PATH_PACKAGE = "us.ilite.robot.controller";
 
     // ================================
     // System ID's
@@ -35,16 +42,19 @@ public class Settings {
 
         public static class CAN {
             public static int kDJBoothTalonId = 72;
-            public static int kHangerNeoID1 = 15;
-            public static int kHangerNeoID2 = 71;
+            public static int kHangerNeoID1 = 5;
+            public static int kHangerNeoID2 = 6;
 //            public static int kTalonThreeID = 65; // Change later
-            public static final int kTurretGyroID = 61; // There isn't a gyro on the BunnyBot
-            public static final int kShooterID = 66; // BunnyBot Shooter
-            public static final int kAcceleratorID = 61; // BunnyBot Conveyor
-            public static final int kTurretID = 69; // BunnyBot Hopper
-            public static final int kDJSpinnerVictorID = 50;
+
+            public static final int kDJSpinnerVictorID = 12; //ID of intake on Aria
             public static int kTimeoutMs = 10; //use for on the fly updates
             public static int kLongTimeoutMs = 100; //use for constructors
+
+            public static final int kShooterID = 66; // BunnyBot Shooter
+
+
+            public static int kSRXTurretId = 9;
+            public static int kLEDControlCanifierID = 0;
 
 //            public static double kGyroCollisionThreshold = 0.0;
 
@@ -61,9 +71,14 @@ public class Settings {
 
             public static int kMAXIntakeRollerId = 7;
             public static int kMAXIntakeArm = 8;
+            public static int kFeederId = 10;
             public static int kTalonPowerCellSerializer = 11;
             public static int kTalonVerticalID = 12;
-            public static int kLEDControlCanifierID = 0;
+            public static int kFalconMasterId = 13;
+            public static int kFalconFollowerId = 14;
+
+            public static int kLEDControlCanifier = 40;
+
 
             // ===== 2019 Drive =====
 //            public static  int kDriveLeftMaster = 1;
@@ -74,6 +89,7 @@ public class Settings {
         }
 
         public static class Analog {
+            public static int kHoodPot = 0; //Current bunnybot analog port
         }
 
         public static class DIO {
@@ -81,6 +97,10 @@ public class Settings {
             public static int kSecondaryBeamChannel = 8; // Change later
             public static int kExitBeamChannel = 7; // Change later
             public static final int kAnglerID = 8; // BunnyBot Catapult
+        }
+
+        public static class PWM {
+            public static int kHoodServoId = 9;
         }
 
         public static class PCM {
@@ -97,7 +117,7 @@ public class Settings {
         // These are applied AFTER the normal throttle reduction
         public static double kSnailModePercentThrottleReduction = 0.5;
         public static double kSnailModePercentRotateReduction = 0.4;
-        public static double kMaxAllowedVelocityMultiplier = 1.0; //set back to lower value for safety before merging
+        public static double kMaxAllowedVelocityMultiplier = 0.5;
 
         // Applied after any scaling
         public static double kDriverInputTurnMaxMagnitude = 0.5;
