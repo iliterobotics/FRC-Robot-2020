@@ -164,22 +164,35 @@ public abstract class AbstractController {
         db.flywheel.set(SET_FEEDER_rpm, pFlywheelSpeed.feeder * 11000.0);
     }
 
+    protected final void stopShooting() {
+        setFlywheelClosedLoop(FlywheelSpeeds.OFF, false);
+    }
+
+    protected final void stopFeeding() {
+        setFeederClosedLoop(FlywheelSpeeds.OFF);
+        db.powercell.set(SET_V_pct, 0);
+        db.powercell.set(SET_H_pct, 0);
+    }
+
     protected final void setTurretHandling(TurretControlType pTurretControlType) {
         setTurretHandling(pTurretControlType, Limelight.NONE.id());
     }
 
-    protected final void setTurretHandling(TurretControlType pTurretControlType, int pTrackingId) {
+    protected final void setTurretHandling(TurretControlType pTurretControlType, int pTrackingId)  {
         db.goaltracking.set(ELimelightData.TARGET_ID, pTrackingId);
         db.flywheel.set(EShooterSystemData.TURRET_CONTROL, pTurretControlType);
     }
 
-    protected void
-    firingSequence(FlywheelSpeeds speed, Field2020.FieldElement trackedElement) {
+    protected void firingSequence(FlywheelSpeeds speed, Field2020.FieldElement trackedElement, boolean pHandleTurret) {
         setHood(speed);
         setFlywheelClosedLoop(speed, false);
         if (isHoodAtCorrectAngle(speed)) {
-            setTurretHandling(TurretControlType.TARGET_LOCKING, trackedElement.id());
-            if (isTurretAtCorrectAngle() && isFlywheelUpToSpeed()) {
+            boolean isTurretAimed = true;
+            if (pHandleTurret) {
+                setTurretHandling(TurretControlType.TARGET_LOCKING, trackedElement.id());
+                isTurretAimed = isTurretAtCorrectAngle();
+            }
+            if (isTurretAimed && isFlywheelUpToSpeed()) {
                 setFeederClosedLoop(speed);
                 if (isFeederUpToSpeed()) {
                     db.powercell.set(SET_V_pct, 0.5);

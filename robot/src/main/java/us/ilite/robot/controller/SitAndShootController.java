@@ -16,7 +16,9 @@ public class SitAndShootController extends BaseAutonController
     private boolean mPreviouslyBroken;
     private boolean mIsBroken;
     private int mCyclesNotShooting = 0;
+    private int mCyclesNotAimed = 0;
     private boolean mFinished = false;
+
     public SitAndShootController() {
         super();
         mExitBeamBrokenCount = 0;
@@ -26,7 +28,14 @@ public class SitAndShootController extends BaseAutonController
 
     @Override
     protected void updateImpl(double pNow) {
-        firingSequence(Enums.FlywheelSpeeds.INITIATION_LINE, Field2020.FieldElement.OUTER_GOAL);
+        if (mCyclesNotAimed >= 7 / .02) {
+            firingSequence(Enums.FlywheelSpeeds.INITIATION_LINE, Field2020.FieldElement.OUTER_GOAL, false);
+        } else {
+            firingSequence(Enums.FlywheelSpeeds.INITIATION_LINE, Field2020.FieldElement.OUTER_GOAL, true);
+            if (mExitBeamBrokenCount < 3) {
+                mCyclesNotAimed++;
+            }
+        }
         mIsBroken = db.powercell.isSet(EPowerCellData.EXIT_BEAM);
 
         if (mPreviouslyBroken && !mIsBroken) {
@@ -34,6 +43,9 @@ public class SitAndShootController extends BaseAutonController
         }
 
         if(mExitBeamBrokenCount == 3 || mCyclesNotShooting >= 10 / .02) {
+            setTurretHandling(Enums.TurretControlType.HOME);
+            stopFeeding();
+            stopShooting();
             db.drivetrain.set(EDriveData.STATE, Enums.EDriveState.SMART_MOTION);
             Robot.DATA.drivetrain.set(EDriveData.L_DESIRED_POS, 10);
             Robot.DATA.drivetrain.set(EDriveData.R_DESIRED_POS, 10);
