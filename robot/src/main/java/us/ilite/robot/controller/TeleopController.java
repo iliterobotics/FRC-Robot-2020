@@ -5,20 +5,22 @@ import com.flybotix.hfr.util.log.Logger;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import us.ilite.common.Field2020;
 import us.ilite.common.config.InputMap;
+import us.ilite.common.config.Settings;
 import us.ilite.common.types.EHangerModuleData;
 import us.ilite.common.types.ELimelightData;
+import us.ilite.common.types.EShooterSystemData;
+import us.ilite.common.types.input.ELogitech310;
 import us.ilite.robot.Enums;
 import us.ilite.robot.Robot;
 
 import static us.ilite.common.types.EPowerCellData.*;
-import static us.ilite.common.types.EPowerCellData.DESIRED_H_VELOCITY;
 import static us.ilite.robot.Robot.DATA;
 
 public class TeleopController extends BaseManualController { //copied from TestController, needs editing
 
     private ILog mLog = Logger.createLog(TeleopController.class);
     private static TeleopController INSTANCE;
-    private Enums.FlywheelSpeeds currentState = Enums.FlywheelSpeeds.OFF;
+    private Enums.FlywheelSpeeds currentState = Enums.FlywheelSpeeds.CLOSE;
 
     public static TeleopController getInstance() {
         if(INSTANCE == null) {
@@ -28,10 +30,12 @@ public class TeleopController extends BaseManualController { //copied from TestC
     }
 
     private TeleopController() {
+        db.registerAllWithShuffleboard();
     }
 
     @Override
     protected void updateImpl(double pNow) {
+        db.registerAllWithShuffleboard();
         // ========================================
         // DO NOT COMMENT OUT THESE METHOD CALLS
         // ========================================
@@ -39,36 +43,38 @@ public class TeleopController extends BaseManualController { //copied from TestC
         updateFlywheel(pNow);
         super.updateDrivetrain(pNow);
         updatePowerCells(pNow);
-        //updateHanger(pNow); //not integrated yet
+        updateHanger(pNow); //not integrated yet
         //updateDJBooth(pNow); //not integrated yet
     }
 
     private void updateHanger(double pNow) {
-        if (db.operatorinput.isSet(InputMap.OPERATOR.BEGIN_HANG)) {
-            DATA.hanger.set(EHangerModuleData.DESIRED_POSITION, 17.0);
-        } else {
-            DATA.hanger.set(EHangerModuleData.DESIRED_POSITION, 0.0);
+        if (db.operatorinput.get(InputMap.OPERATOR.BEGIN_HANG) >= 0.5 && db.driverinput.isSet(InputMap.DRIVER.HANGER_LOCK)) {
+            db.hanger.set(EHangerModuleData.DESIRED_PCT, (db.operatorinput.get(ELogitech310.LEFT_Y_AXIS) / 5.0));
+        }else{
+            db.hanger.set(EHangerModuleData.DESIRED_PCT, 0.0);
         }
     }
 
     private void updateFlywheel(double pNow) {
-        if(db.operatorinput.isSet(InputMap.OPERATOR.FAR_MODE))
-        {
+        if(db.operatorinput.isSet(InputMap.OPERATOR.FAR_MODE)) {
             currentState = Enums.FlywheelSpeeds.FAR;
-        }
-        else if(db.operatorinput.isSet(InputMap.OPERATOR.NEAR_MODE))
-        {
-            currentState = Enums.FlywheelSpeeds.CLOSE;
+        }else if(db.operatorinput.isSet(InputMap.OPERATOR.NEAR_MODE)){
+            currentState = Enums.FlywheelSpeeds.INITIATION_LINE;
         }
 
-        if(db.operatorinput.isSet(InputMap.OPERATOR.AIM) || db.driverinput.isSet(InputMap.DRIVER.FIRE_POWER_CELLS))
-        {
-            super.setFlywheelClosedLoop(currentState);
+        if(db.driverinput.isSet(InputMap.DRIVER.FIRE_POWER_CELLS)) {
+            super.setTurretHandling(Enums.TurretControlType.TARGET_LOCKING, Field2020.FieldElement.OUTER_GOAL.id());
+            super.firingSequence(currentState);
+//            super.setFlywheelClosedLoop(currentState);
+        } else if (db.operatorinput.isSet(InputMap.OPERATOR.AIM)) {
+            super.setTurretHandling(Enums.TurretControlType.TARGET_LOCKING, Field2020.FieldElement.OUTER_GOAL.id());
+            super.setFlywheelClosedLoop(currentState, true);
+        } else {
+            super.setTurretHandling(Enums.TurretControlType.HOME);
+            super.firingSequence(Enums.FlywheelSpeeds.OFF);
+//            super.setFlywheelClosedLoop(Enums.FlywheelSpeeds.OFF);
         }
-        else
-        {
-            super.setFlywheelClosedLoop(Enums.FlywheelSpeeds.OFF);
-        }
+        SmartDashboard.putString("Flywheel State", currentState.name());
     }
 
 //    public void updateLimelightTargetLock() {
@@ -81,7 +87,6 @@ public class TeleopController extends BaseManualController { //copied from TestC
 //            if (DATA.selectedTarget.isSet(ELimelightData.TY)) {
 //                if (Math.abs(DATA.selectedTarget.get(ELimelightData.TX)) < mLimelightZoomThreshold) {
 //                    DATA.limelight.set(ELimelightData.TARGET_ID, (double) Field2020.FieldElement.TARGET_ZOOM.id());
-//                    System.out.println("ZOOMING");
 //                } else {
 //                    DATA.limelight.set(ELimelightData.TARGET_ID, (double) Field2020.FieldElement.TARGET.id());
 //                }
@@ -105,28 +110,38 @@ public class TeleopController extends BaseManualController { //copied from TestC
 //    }
 
     protected void updatePowerCells(double pNow) {
+        if(db.operatorinput.isSet(InputMap.OPERATOR.RESET_INTAKE_COUNT)) {
+            resetSerializerState();
+        }
         // Default to none
         db.powercell.set(INTAKE_STATE, Enums.EArmState.NONE);
 
+        if (db.operatorinput.isSet(InputMap.OPERATOR.INTAKE_BULLDOZE)) {
+
+        }
         if (db.operatorinput.isSet(InputMap.OPERATOR.INTAKE_ACTIVATE)) {
-            setIntakeArmEnabled(pNow, true);
-            activateSerializer(pNow);
+//            if (!db.driverinput.isSet(InputMap.DRIVER.FIRE_POWER_CELLS)) {
+                setIntakeArmEnabled(pNow, true);
+                activateSerializer(pNow);
+//            }
 
         } else if (db.operatorinput.isSet(InputMap.OPERATOR.INTAKE_REVERSE)) {
             db.powercell.set(INTAKE_STATE, Enums.EArmState.STOW);
             reverseSerializer(pNow);
         } else if (db.operatorinput.isSet(InputMap.OPERATOR.INTAKE_STOW)) {
             setIntakeArmEnabled(pNow, false);
-            activateSerializer(pNow);
+            if (!db.driverinput.isSet(InputMap.DRIVER.FIRE_POWER_CELLS)) {
+                activateSerializer(pNow);
+            }
         } else {
             db.powercell.set(INTAKE_STATE, Enums.EArmState.NONE);
-            db.powercell.set(DESIRED_INTAKE_VELOCITY_FT_S, 0d);
+            db.powercell.set(SET_INTAKE_VEL_ft_s, 0d);
         }
-
-        if ((db.driverinput.isSet(InputMap.DRIVER.FIRE_POWER_CELLS) && isFlywheelUpToSpeed() && isFeederUpToSpeed())) {
-            db.powercell.set(DESIRED_V_VELOCITY, 0.6);
-            db.powercell.set(DESIRED_H_VELOCITY, 0.5);
-        }
+//
+//        if ((db.driverinput.isSet(InputMap.DRIVER.FIRE_POWER_CELLS) && isFlywheelUpToSpeed() && isFeederUpToSpeed())) {
+//            db.powercell.set(SET_V_pct, 0.6);
+//            db.powercell.set(SET_H_pct, 0.5);
+//        }
     }
 
 //    void updateDJBooth(double pNow) {

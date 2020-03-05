@@ -68,7 +68,6 @@ public class Limelight extends Module implements ITargetDataProvider {
     public void readInputs(double pNow) {
         boolean targetValid = mTable.getEntry("tv").getDouble(Double.NaN) > 0.0;
         db.goaltracking.set(TV, targetValid ? 1.0d : 0d);
-
         if(targetValid) {
             db.goaltracking.set(TX, mTable.getEntry("tx").getDouble(Double.NaN));
             db.goaltracking.set(TY,mTable.getEntry("ty").getDouble(Double.NaN));
@@ -104,7 +103,7 @@ public class Limelight extends Module implements ITargetDataProvider {
 
     @Override
     public void shutdown(double pNow) {
-
+        db.goaltracking.set(ELimelightData.PIPELINE, Limelight.NONE.id());
     }
 
     private void setPipeline() {
