@@ -20,8 +20,11 @@ public class AutonSelection {
         LINE_AUTON_CONTROLLER("Line Auton Controller",new LazyReference<>(()->{
             return new LineAutonController();
         })),
-        SHOOT_INTAKE_CONTROLLER("Shoot Auton Controller",new LazyReference<>(()->{
-            return new ShootIntakeController();
+        OUR_TRENCH_CONTROLLER("Our Trench Controller", new LazyReference(()->{
+            return new OurTrenchController();
+        })),
+        SIT_AND_SHOOT_CONTROLLER("Sit and Shoot Controller", new LazyReference(()->{
+            return new SitAndShootController();
         }));
 
         private final String displayedName;
