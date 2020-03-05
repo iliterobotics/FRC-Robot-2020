@@ -27,7 +27,7 @@ public class SitAndShootController extends BaseAutonController
     @Override
     protected void updateImpl(double pNow) {
         firingSequence(Enums.FlywheelSpeeds.INITIATION_LINE, Field2020.FieldElement.OUTER_GOAL);
-        mIsBroken = db.powercell.get(EPowerCellData.EXIT_BEAM) == 1.0;
+        mIsBroken = db.powercell.isSet(EPowerCellData.EXIT_BEAM);
 
         if (mPreviouslyBroken && !mIsBroken) {
             mExitBeamBrokenCount++;
@@ -40,7 +40,6 @@ public class SitAndShootController extends BaseAutonController
         } else {
             mCyclesNotShooting++;
         }
-        SmartDashboard.putNumber("EXIT BEAM BROKEN N TIMES", mExitBeamBrokenCount);
         mPreviouslyBroken = mIsBroken;
         mFinished = getDriveDistance() >= 9;
     }
