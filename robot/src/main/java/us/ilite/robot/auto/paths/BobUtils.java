@@ -7,6 +7,7 @@ import static com.team319.trajectory.Path.SegmentValue.*;
 import com.team319.trajectory.Path;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.trajectory.Trajectory;
 import org.reflections.Reflections;
 import us.ilite.common.Distance;
@@ -27,22 +28,6 @@ public class BobUtils {
 
     private static final Map<String, Double> mMaxTimeCache = new HashMap<>();
     private HelixFollower hf;
-
-    public enum BobPathValue {
-        dt(0),
-        x(1), y(2),
-        left_pos(3), left_vel(4), left_acc(5), left_jerk(6),
-        center_pos(7), center_vel(8), center_acc(9), center_jerk(10),
-        right_pos(11), right_vel(12), right_acc(13), right_jerk(14),
-        heading(15);
-
-        public int index;
-
-        BobPathValue(int pIndex) {
-            this.index = pIndex;
-        }
-
-    }
 
     public static double getMeters(Path pPath, Path.SegmentValue pKey, int i) {
         return Distance.fromFeet(pPath.getValue(i, pKey)).meters();
@@ -176,19 +161,27 @@ public class BobUtils {
     public static int getIndexForCumulativeTime(Path pPath, double pNow, double pPathStartTimestamp) {
         double dt = pNow - pPathStartTimestamp;
         // Check path overrun
+        SmartDashboard.putBoolean ("DT > PATHTIME", dt > (getPathTotalTime(pPath) + AutonSelection.mDelaySeconds));
+        SmartDashboard.putBoolean ("Pnow < pathstart", (pNow < pPathStartTimestamp));
         if(
                 pNow < pPathStartTimestamp ||
-                dt > getPathTotalTime(pPath)
+                dt > (getPathTotalTime(pPath) + AutonSelection.mDelaySeconds)
         ) {
             return -1;
         }
         return (int)(dt / 0.020);
     }
 
-    public static double getPathValueForCumulativeTime(Path pPath, double pNow, double pPathStartTimestamp, BobPathValue pBobValue) {
+
+    public static double getPathValueForCumulativeTime(Path pPath, double pNow, double pPathStartTimestamp, Path.SegmentValue pBobValue) {
         int pathIndex = getIndexForCumulativeTime(pPath, pNow, pPathStartTimestamp);
-        return pPath.getPath()[pathIndex][pBobValue.index];
+        return pPath.getPath()[pathIndex][pBobValue.ordinal()];
     }
+
+    public static boolean isFinished(double pNow, Path pPath, double pPathStartTime) {
+        return getIndexForCumulativeTime(pPath, pNow, pPathStartTime) == -1;
+    }
+
 
     /**
      * Return the max speed of the path in feet/sec

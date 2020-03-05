@@ -6,6 +6,7 @@ import com.flybotix.hfr.codex.RobotCodex;
 import com.flybotix.hfr.util.log.ELevel;
 import com.flybotix.hfr.util.log.ILog;
 import com.flybotix.hfr.util.log.Logger;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
@@ -38,17 +39,16 @@ public class Robot extends TimedRobot {
     private static EMatchMode MODE = DISABLED;
     private ModuleList mRunningModules = new ModuleList();
     private final Settings mSettings = new Settings();
-
-    public static final CSVLogger mCSVLogger = new CSVLogger( Settings.kIsLogging );
-//    private HangerModule mHanger = new HangerModule();
+    private HangerModule mHanger;
+    private CSVLogger mCSVLogger = new CSVLogger(true);
     private Timer initTimer = new Timer();
 
     private DriveModule mDrive;
-//    private Limelight mLimelight;
+    private Limelight mLimelight;
     private PowerCellModule mIntake;
-//    private RawLimelight mRawLimelight;
-//    private DJSpinnerModule mDJSpinnerModule;
-//    private LEDControl mLEDControl;
+    private RawLimelight mRawLimelight;
+    private DJSpinnerModule mDJSpinnerModule;
+    private LEDControl mLEDControl;
     private SimulationModule mSimulation;
     private FlywheelModule mShooter;
 
@@ -66,22 +66,21 @@ public class Robot extends TimedRobot {
 
     @Override
     public void robotInit() {
-
         Arrays.stream(EForwardableConnections.values()).forEach(EForwardableConnections::addPortForwarding);
         // Init the actual robot
-        initTimer.reset();
-        initTimer.start();
+//        initTimer.reset();
+//        initTimer.start();
         MODE=INITIALIZING;
         mLogger.warn("===> ROBOT INIT Starting");
         mAutonSelection = new AutonSelection();
         mOI = new OperatorInput();
         mDrive = new DriveModule();
-//        mLEDControl = new LEDControl();
         mShooter = new FlywheelModule();
         mIntake = new PowerCellModule();
-//        mLimelight = new Limelight();
+        mLimelight = new Limelight();
 //        mRawLimelight = new RawLimelight();
-//        mDJSpinnerModule = new DJSpinnerModule();
+        mDJSpinnerModule = new DJSpinnerModule();
+        mLEDControl = new LEDControl();
         if(IS_SIMULATED) {
             mSimulation = new SimulationModule();
         }
@@ -128,16 +127,19 @@ public class Robot extends TimedRobot {
 
     @Override
     public void autonomousInit() {
-//        if ( Settings.kIsLogging ) {
-//            mCSVLogger.start();
-//        }
+        if ( Settings.kIsLogging ) {
+            mCSVLogger.start();
+        }
 
         MODE=AUTONOMOUS;
         mActiveController = mAutonSelection.getSelectedAutonController();
+        SmartDashboard.putNumber("AUTON INIT", CLOCK.getCurrentTime());
         mActiveController.setEnabled(true);
         mRunningModules.clearModules();
-        mRunningModules.addModule(mDrive);
+        mRunningModules.addModule(mLimelight);
+        mRunningModules.addModule(mShooter);
         mRunningModules.addModule(mIntake);
+        mRunningModules.addModule(mDrive);
         mRunningModules.modeInit(AUTONOMOUS, CLOCK.getCurrentTime());
     }
 
@@ -152,6 +154,12 @@ public class Robot extends TimedRobot {
             mCSVLogger.start();
         }
 
+        mRunningModules.clearModules();
+        mRunningModules.addModule(mOI);
+        mRunningModules.addModule(mShooter);
+        mRunningModules.addModule(mDrive);
+        mRunningModules.addModule(mIntake);
+        mRunningModules.addModule(mLimelight);
         MODE=TELEOPERATED;
         mActiveController = mTeleopController;
         mActiveController.setEnabled(true);
@@ -200,7 +208,7 @@ public class Robot extends TimedRobot {
 
         mRunningModules.clearModules();
         mRunningModules.addModule(mOI);
-//        mRunningModules.addModule(mLimelight);
+        mRunningModules.addModule(mLimelight);
         mRunningModules.addModule(mShooter);
         mRunningModules.addModule(mDrive);
 //        mRunningModules.addModule(mHanger);

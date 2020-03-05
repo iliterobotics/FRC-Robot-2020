@@ -61,14 +61,13 @@ public class Limelight extends Module implements ITargetDataProvider {
 
     @Override
     public void modeInit(EMatchMode pMode, double pNow) {
-        Robot.DATA.goaltracking.set(TARGET_ID, (double) NONE.id());
+        Robot.DATA.goaltracking.set(TARGET_ID, NONE.id());
     }
 
     @Override
     public void readInputs(double pNow) {
         boolean targetValid = mTable.getEntry("tv").getDouble(Double.NaN) > 0.0;
         Robot.DATA.goaltracking.set(TV, targetValid ? 1.0d : 0d);
-
         if(targetValid) {
             Robot.DATA.goaltracking.set(TX, mTable.getEntry("tx").getDouble(Double.NaN));
             Robot.DATA.goaltracking.set(TY,mTable.getEntry("ty").getDouble(Double.NaN));
@@ -104,7 +103,7 @@ public class Limelight extends Module implements ITargetDataProvider {
 
     @Override
     public void shutdown(double pNow) {
-
+        db.goaltracking.set(ELimelightData.PIPELINE, Limelight.NONE.id());
     }
 
     private void setPipeline() {

@@ -1,13 +1,19 @@
 package us.ilite.robot.controller;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Color;
 import us.ilite.common.config.InputMap;
 import us.ilite.common.types.EColorData;
 import com.flybotix.hfr.util.log.ILog;
 import com.flybotix.hfr.util.log.Logger;
+import us.ilite.common.Field2020;
+import us.ilite.common.types.EHangerModuleData;
+import us.ilite.common.types.EShooterSystemData;
 import com.flybotix.hfr.codex.RobotCodex;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.util.Color;
+import edu.wpi.first.wpilibj.DriverStation;
+
 import com.flybotix.hfr.util.log.ILog;
 import com.flybotix.hfr.util.log.Logger;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -24,12 +30,10 @@ import us.ilite.common.types.sensor.EGyro;
 import us.ilite.robot.Enums;
 import us.ilite.robot.Robot;
 import us.ilite.robot.modules.*;
-
 import static us.ilite.common.types.ELimelightData.*;
 import us.ilite.robot.modules.DJSpinnerModule;
 import us.ilite.robot.modules.Limelight;
 import static us.ilite.robot.Enums.*;
-
 import static us.ilite.common.types.EPowerCellData.*;
 import static us.ilite.common.types.EShooterSystemData.*;
 import static us.ilite.common.types.drive.EDriveData.L_ACTUAL_VEL_FT_s;
@@ -89,8 +93,8 @@ public class TestController extends BaseManualController {
         Robot.CLOCK.report("updateFlywheel", t -> updateFlywheel(pNow));
         Robot.CLOCK.report("updateDrivetrain", t -> updateDrivetrain(pNow));
         Robot.CLOCK.report("updateIntake", t -> updatePowerCells(pNow));
-//        Robot.CLOCK.report("updateHanger", t -> updateHanger(pNow));
-//        Robot.CLOCK.report("updateDJBooth", t -> updateDJBooth(pNow));
+        Robot.CLOCK.report("updateHanger", t -> updateHanger(pNow));
+        Robot.CLOCK.report("updateDJBooth", t -> updateDJBooth(pNow));
 //        updateArm(pNow);
 
         double spd = Math.max(db.drivetrain.get(R_ACTUAL_VEL_FT_s), db.drivetrain.get(L_ACTUAL_VEL_FT_s));
@@ -108,23 +112,26 @@ public class TestController extends BaseManualController {
         } else {
             Robot.DATA.hanger.set(EHangerModuleData.DESIRED_POSITION, 0.0);
         }
+    }
+
+    private void updateFlywheel() {
+
 
     }
 
-    private void firingSequence(FlywheelSpeeds speed) {
-        db.flywheel.set(BALL_VELOCITY_ft_s, speed.speed);
-        if (isFlywheelUpToSpeed()) {
-            db.flywheel.set(FEEDER_OUTPUT_OPEN_LOOP, speed.feeder);
-            if (isFeederUpToSpeed()) {
-                db.powercell.set(SET_V_pct, 0.5);
-            } else {
-                db.powercell.set(SET_V_pct, 0);
-            }
-        }
-    }
+
 
     private void updateFlywheel(double pNow) {
+//        db.flywheel.set(TURRET_CONTROL, TurretControlType.MANUAL);
+//        double turretDirection = db.operatorinput.get(InputMap.OPERATOR_REFACTOR.MANUAL_TURRET);
+//        turretDirection = Math.abs(turretDirection) > 0.02 ? turretDirection : 0.0; //Handling Deadband
+//        db.flywheel.set(MANUAL_TURRET_DIRECTION, turretDirection);
 
+        if (db.groundTracking.isSet(TX)) {
+            db.flywheel.set(DESIRED_TURRET_ANGLE, db.goaltracking.get(CALC_ANGLE_TO_TARGET));
+        } else {
+            db.flywheel.set(DESIRED_TURRET_ANGLE, 0);
+        }
         if (flywheelinput.isSet(InputMap.FLYWHEEL.FLYWHEEL_VELOCITY_10_TEST)) {
             firingSequence(FlywheelSpeeds.CLOSE);
         } else if (flywheelinput.isSet(InputMap.FLYWHEEL.FLYWHEEL_VELOCITY_20_TEST)) {
@@ -168,7 +175,7 @@ public class TestController extends BaseManualController {
             state = Enums.FlywheelSpeeds.OFF;
         }
         db.flywheel.set(FLYWHEEL_SPEED_STATE, state);
-        setFlywheelClosedLoop(state);
+        setFlywheelClosedLoop(state, true);
         if(flywheelinput.isSet(InputMap.FLYWHEEL.TEST_FIRE) && isFlywheelUpToSpeed()) {
             db.flywheel.set(FEEDER_OUTPUT_OPEN_LOOP, state.feeder);
             db.flywheel.set(SET_FEEDER_rpm, state.feeder * 11000.0);
@@ -240,16 +247,13 @@ public class TestController extends BaseManualController {
     }
 
     protected void updatePowerCells(double pNow) {
-        if(flywheelinput.isSet(ELogitech310.START)) {
-            mNumBalls = 0;
-            mEntryLatch.reset();
-            mSecondaryLatch.reset();
+        if(flywheelinput.isSet(InputMap.FLYWHEEL.RESET_INTAKE_COUNT)) {
+            resetSerializerState();
         }
         // Default to none
         db.powercell.set(INTAKE_STATE, EArmState.NONE);
 
         if (db.operatorinput.isSet(InputMap.OPERATOR.INTAKE_ACTIVATE) || flywheelinput.isSet(InputMap.FLYWHEEL.BASIC_INTAKE)) {
-            System.out.println("Enabling Intake");
             setIntakeArmEnabled(pNow, true);
             activateSerializer(pNow);
         } else if (db.operatorinput.isSet(InputMap.OPERATOR.INTAKE_REVERSE) || flywheelinput.isSet(InputMap.FLYWHEEL.REVERSE_INTAKE)) {
@@ -273,7 +277,6 @@ public class TestController extends BaseManualController {
 
     void updateDJBooth(double pNow) {
         if (db.operatorinput.isSet(InputMap.OPERATOR.COLOR_POSITION)) {
-            db.color.set(EColorData.DESIRED_MOTOR_POWER, EColorWheelState.POSITION.getPower());
             int i = (int) db.color.get(EColorData.SENSED_COLOR);
             EColorMatch m = EColorMatch.values()[i];
             Color DJ_COLOR = null;
@@ -294,75 +297,30 @@ public class TestController extends BaseManualController {
                     DJ_COLOR = null;
                     break;
             }
-            if (m.color.equals(DJ_COLOR)) {
-                //TODO stop using the module for the desired power
-                db.color.set(EColorData.DESIRED_MOTOR_POWER, EColorWheelState.OFF.getPower());
+            if ( DJ_COLOR == null ) {
+                DriverStation.reportError("NO FMS RELAY RECEIVED! SWITCHING TO MANUAL!", false );
+                db.color.set(EColorData.DESIRED_MOTOR_POWER, EColorWheelState.POSITION.power);
+                db.color.set(EColorData.COLOR_WHEEL_MOTOR_STATE, (double) EColorWheelState.POSITION.ordinal());
+            } else if (m.color.equals(DJ_COLOR)) {
+                db.color.set(EColorData.DESIRED_MOTOR_POWER, EColorWheelState.OFF.power);
+                db.color.set(EColorData.COLOR_WHEEL_MOTOR_STATE, (double) EColorWheelState.POSITION.ordinal());
             } else {
                 db.color.set(EColorData.DESIRED_MOTOR_POWER, EColorWheelState.POSITION.getPower());
                 db.color.set(EColorData.COLOR_WHEEL_MOTOR_STATE, EColorWheelState.POSITION.ordinal());
             }
         }
-        else if ( db.operatorinput.isSet(InputMap.OPERATOR.COLOR_ROTATION)) {
-            db.color.set(EColorData.DESIRED_MOTOR_POWER, EColorWheelState.ROTATION.getPower());
+        else if ( db.operatorinput.isSet(InputMap.OPERATOR.COLOR_ROTATION )) {
             if(db.color.get(EColorData.WHEEL_ROTATION_COUNT) >= DJSpinnerModule.TARGET_ROTATION_COUNT) {
-                db.color.set(EColorData.COLOR_WHEEL_MOTOR_STATE, EColorWheelState.OFF.ordinal());
                 db.color.set(EColorData.DESIRED_MOTOR_POWER, EColorWheelState.OFF.getPower());
             } else {
-                db.color.set(EColorData.COLOR_WHEEL_MOTOR_STATE, EColorWheelState.ROTATION.ordinal());
                 db.color.set(EColorData.DESIRED_MOTOR_POWER, EColorWheelState.ROTATION.getPower());
             }
+            db.color.set(EColorData.COLOR_WHEEL_MOTOR_STATE, EColorWheelState.ROTATION.ordinal());
         }
-
     }
 }
 
 
-
-//    void updateDJBooth() {
-//        if ( db.operatorinput.isSet(InputMap.OPERATOR.OPERATOR_POSITION_CONTROL)) {
-//            DJSpinnerModule.EColorMatch m =db.color.get(EColorData.SENSED_COLOR, DJSpinnerModule.EColorMatch.class);
-//            if(m.color.equals(db.DJ_COLOR)) {
-//                db.color.set(EColorData.DESIRED_MOTOR_POWER, DJSpinnerModule.EColorWheelState.OFF.power);
-//            } else {
-//                db.color.set(EColorData.DESIRED_MOTOR_POWER, DJSpinnerModule.EColorWheelState.POSITION.power);
-//                db.color.set(EColorData.COLOR_WHEEL_MOTOR_STATE, (double) DJSpinnerModule.EColorWheelState.POSITION.ordinal());
-//            }
-//        }
-//
-
-
-//
-//
-//        if ( db.operatorinput.isSet(InputMap.OPERATOR.OPERATOR_POSITION_CONTROL) &&
-//                db.operatorinput.isSet(InputMap.OPERATOR.OPERATOR_ROTATION_CONTROL) ) {
-//            db.color.set(EColorData.POSITION_CONTROL_INPUT, (double)EColorData.EInput.NEGATIVE.ordinal());
-//            db.color.set(EColorData.ROTATION_CONTROL_INPUT, (double)EColorData.EInput.NEGATIVE.ordinal());
-//        }
-//        else if (db.operatorinput.isSet(InputMap.OPERATOR.OPERATOR_POSITION_CONTROL)) {
-//            db.color.set(EColorData.POSITION_CONTROL_INPUT, (double)EColorData.EInput.POSITIVE.ordinal());
-//            if (db.color.get(EColorData.COLOR_WHEEL_MOTOR_STATE).equals(EColorData.EMotorState.ON.ordinal()) ) {
-//                mVictor.set(ControlMode.PercentOutput, Settings.kDJBoothOuput );
-//            }
-//            else {
-//                mVictor.set(ControlMode.PercentOutput, 0d );
-//            }
-//        }
-//        else if (db.operatorinput.isSet(InputMap.OPERATOR.OPERATOR_ROTATION_CONTROL) ) {
-//            db.color.set(EColorData.ROTATION_CONTROL_INPUT, (double)EColorData.EInput.POSITIVE.ordinal());
-//            if (db.color.get(EColorData.COLOR_WHEEL_MOTOR_STATE).equals(EColorData.EMotorState.ON.ordinal()) ) {
-//                mVictor.set(ControlMode.PercentOutput, Settings.kDJBoothOuput );
-//            }
-//            else {
-//                mVictor.set(ControlMode.PercentOutput, 0d );
-//            }
-//        }
-//        else {
-//            db.color.set(EColorData.POSITION_CONTROL_INPUT, (double)EColorData.EInput.NEGATIVE.ordinal());
-//            db.color.set(EColorData.ROTATION_CONTROL_INPUT, (double)EColorData.EInput.NEGATIVE.ordinal());
-//        }
-
-//    }
-//
 //    public void updateArm(double pNow) {
 //        if (db.operatorinput.isSet(InputMap.OPERATOR.HIGHER_ARM)) {
 //            mArmState = PowerCellModule.EArmState.ENGAGED;
