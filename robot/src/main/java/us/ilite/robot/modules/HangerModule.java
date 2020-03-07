@@ -3,6 +3,7 @@ package us.ilite.robot.modules;
 import com.revrobotics.*;
 import us.ilite.common.Data;
 import us.ilite.common.config.Settings;
+import us.ilite.common.lib.control.PIDController;
 import us.ilite.common.lib.control.ProfileGains;
 import us.ilite.common.types.EHangerModuleData;
 import us.ilite.common.types.EMatchMode;
@@ -24,6 +25,10 @@ public class HangerModule extends Module {
 
     public static double kMaxRPM = 1000.0;
     private static final int VELOCITY_PID_SLOT = 0;
+    private static ProfileGains mPrimaryVelocityPidGains = new ProfileGains()
+            .p(0.01);
+    private PIDController mPrimaryVelocityPidOne = new PIDController(mPrimaryVelocityPidGains, -1000, 1000, Settings.kControlLoopPeriod);
+    private PIDController mPrimaryVelocityPidTwo = new PIDController(mPrimaryVelocityPidGains, -1000, 1000, Settings.kControlLoopPeriod);
     public static ProfileGains kHangerVelocityGains = new ProfileGains()
             .f(0.00015)
             .p(0.0001)
@@ -35,6 +40,9 @@ public class HangerModule extends Module {
     private int kHangerWarnCurrentLimitThreshold = 60;
 
     public HangerModule(){
+
+        mPrimaryVelocityPidOne.setOutputRange(-1, 1);
+        mPrimaryVelocityPidTwo.setOutputRange(-1, 1);
 
         mHangerNeoMaster = SparkMaxFactory.createDefaultSparkMax(Settings.Hardware.CAN.kHangerNeoID1 ,
                 CANSparkMaxLowLevel.MotorType.kBrushless);
@@ -94,9 +102,21 @@ public class HangerModule extends Module {
 //        mHangerNeoFollower.set(Robot.DATA.hanger.get(EHangerModuleData.DESIRED_PCT));
 //        mHangerNeoMaster.set(Robot.DATA.hanger.get(EHangerModuleData.DESIRED_PCT));
 
-        double desiredPct = db.hanger.safeGet(EHangerModuleData.DESIRED_PCT, 0.0);
-        mHangerPIDMaster.setReference(desiredPct * kMaxRPM, ControlType.kVelocity, VELOCITY_PID_SLOT, 0);
-        mHangerPIDFollower.setReference(desiredPct * kMaxRPM, ControlType.kVelocity, VELOCITY_PID_SLOT, 0);
+        mPrimaryVelocityPidOne.setSetpoint(0.0);
+        mPrimaryVelocityPidTwo.setSetpoint(0.0);
+
+        double highest = Math.max(mHangerEncoderOne.getPosition(), mHangerEncoderTwo.getPosition());
+        double errorOne = highest - mHangerEncoderOne.getPosition();
+        double errorTwo = highest - mHangerEncoderTwo.getPosition();
+
+        double desiredPctOne = mPrimaryVelocityPidOne.calculate(errorOne, pNow);
+        double desiredPctTwo = mPrimaryVelocityPidTwo.calculate(errorTwo, pNow);
+
+        double desiredDirection = Math.signum(db.hanger.safeGet(EHangerModuleData.DESIRED_PCT));
+        if (db.hanger.isSet(EHangerModuleData.DESIRED_PCT)) {
+            mHangerPIDMaster.setReference(desiredDirection * desiredPctOne * kMaxRPM, ControlType.kVelocity, VELOCITY_PID_SLOT, 0);
+            mHangerPIDFollower.setReference(desiredDirection * desiredPctTwo * kMaxRPM, ControlType.kVelocity, VELOCITY_PID_SLOT, 0);
+        }
     }
 
     public EHangerState returnHangerState() {
