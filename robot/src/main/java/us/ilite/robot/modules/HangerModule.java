@@ -112,10 +112,10 @@ public class HangerModule extends Module {
         double desiredPctOne = mPrimaryVelocityPidOne.calculate(errorOne, pNow);
         double desiredPctTwo = mPrimaryVelocityPidTwo.calculate(errorTwo, pNow);
 
-        double desiredDirection = Math.signum(db.hanger.safeGet(EHangerModuleData.DESIRED_PCT));
+//        double desiredDirection = Math.signum(db.hanger.safeGet(EHangerModuleData.DESIRED_PCT));
         if (db.hanger.isSet(EHangerModuleData.DESIRED_PCT)) {
-            mHangerPIDMaster.setReference(desiredDirection * desiredPctOne * kMaxRPM, ControlType.kVelocity, VELOCITY_PID_SLOT, 0);
-            mHangerPIDFollower.setReference(desiredDirection * desiredPctTwo * kMaxRPM, ControlType.kVelocity, VELOCITY_PID_SLOT, 0);
+            mHangerPIDMaster.setReference(desiredPctOne * kMaxRPM, ControlType.kVelocity, VELOCITY_PID_SLOT, 0);
+            mHangerPIDFollower.setReference(desiredPctTwo * kMaxRPM, ControlType.kVelocity, VELOCITY_PID_SLOT, 0);
         }
     }
 
