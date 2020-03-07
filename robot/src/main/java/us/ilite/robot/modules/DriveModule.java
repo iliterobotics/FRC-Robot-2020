@@ -160,7 +160,7 @@ public class DriveModule extends Module {
 		mRightMaster.setInverted(true);
 		mRightFollower.setInverted(true);
 		mGyro = new Pigeon(Settings.Hardware.CAN.kPigeon);
-		double ramprate = 0.01;
+		double ramprate = 0.3;
         mLeftMaster.setClosedLoopRampRate(ramprate);
         mLeftFollower.setClosedLoopRampRate(ramprate);
         mRightMaster.setClosedLoopRampRate(ramprate);
@@ -281,6 +281,7 @@ public class DriveModule extends Module {
 					pidOutput = pidOutput + (Math.signum(pidOutput) * Settings.kTargetAngleLockFrictionFeedforward);
 					SmartDashboard.putNumber("Target Angle Lock PID Output", pidOutput);
 					turn = pidOutput;
+					throttle *= Settings.Input.kSnailModePercentThrottleReduction;
 				}
 			case VELOCITY:
 				mStartHoldingPosition = false;
