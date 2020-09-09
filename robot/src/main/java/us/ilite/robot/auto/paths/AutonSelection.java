@@ -3,6 +3,7 @@ package us.ilite.robot.auto.paths;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import us.ilite.LazyReference;
 import us.ilite.robot.controller.*;
 
 import java.lang.reflect.InvocationTargetException;
@@ -10,18 +11,33 @@ import java.lang.reflect.InvocationTargetException;
 public class AutonSelection {
     public static ShuffleboardTab mAutonConfiguration = Shuffleboard.getTab("Auton Configuration");
     public static int mDelaySeconds;
-    private SendableChooser<Class<?>> mSendableAutonControllers = new SendableChooser<>();
+    private SendableChooser<AUTON_CONTROLLERS> mSendableAutonControllers = new SendableChooser<>();
 
-    /**
-     * Update these Auton Controllers whenever new ones are added
-     */
-    private Class<?>[] mAutonControllers = {
-            LineAutonController.class,
-            ShootIntakeController.class,
-            YoinkController.class,
-            OurTrenchController.class,
-            SitAndShootController.class
-    };
+    private enum AUTON_CONTROLLERS {
+        AUTON_CALIBRATION("Auton Calibration", new LazyReference<>(()->{
+            return new AutonCalibration();
+        })),
+        LINE_AUTON_CONTROLLER("Line Auton Controller",new LazyReference<>(()->{
+            return new LineAutonController();
+        })),
+        OUR_TRENCH_CONTROLLER("Our Trench Controller", new LazyReference(()->{
+            return new OurTrenchController();
+        })),
+        SIT_AND_SHOOT_CONTROLLER("Sit and Shoot Controller", new LazyReference(()->{
+            return new SitAndShootController();
+        }));
+
+        private final String displayedName;
+        private final LazyReference<BaseAutonController> autonController;
+        private AUTON_CONTROLLERS(String displayedName, LazyReference<BaseAutonController> autonController) {
+            this.displayedName = displayedName;
+            this.autonController = autonController;
+        }
+
+        public BaseAutonController getAutonController() {
+            return autonController.getOrCompute();
+        }
+    }
 
     public AutonSelection() {
        mDelaySeconds = ((Double) (mAutonConfiguration.add("Path Delay Seconds", 0)
@@ -31,9 +47,10 @@ public class AutonSelection {
                .getDouble(0.0)))
                .intValue();
 
-        mSendableAutonControllers.setDefaultOption("Default - Auton Calibration", AutonCalibration.class);
-        for (Class<?> c : mAutonControllers) {
-            mSendableAutonControllers.addOption(c.getSimpleName(), c);
+        mSendableAutonControllers.setDefaultOption("Default - Auton Calibration", AUTON_CONTROLLERS.AUTON_CALIBRATION);
+
+        for(AUTON_CONTROLLERS auton_controllers : AUTON_CONTROLLERS.values()) {
+            mSendableAutonControllers.addOption(auton_controllers.displayedName ,auton_controllers);
         }
 
         mAutonConfiguration.add("Choose Auton Controller", mSendableAutonControllers)
@@ -42,18 +59,7 @@ public class AutonSelection {
     }
 
     public BaseAutonController getSelectedAutonController() {
-        try {
-            return (BaseAutonController) mSendableAutonControllers.getSelected().getDeclaredConstructor().newInstance();
-        } catch (NoSuchMethodException nsme) {
-            nsme.printStackTrace();
-        } catch (InstantiationException ie) {
-            ie.printStackTrace();
-        } catch (IllegalAccessException iae) {
-            iae.printStackTrace();
-        } catch (InvocationTargetException ite) {
-            ite.printStackTrace();
-        }
-        // THIS SHOULD NEVER BE REACHED
-        return null;
+
+        return mSendableAutonControllers.getSelected().autonController.getOrCompute();
     }
 }
