@@ -46,6 +46,7 @@ public class Robot extends TimedRobot {
     private LEDControl mLEDControl;
     private SimulationModule mSimulation;
     private FlywheelModule mShooter;
+    private DriveForwardDoStuffController mPracticeController;
 
 //    private PowerDistributionPanel pdp = new PowerDistributionPanel(Settings.Hardware.CAN.kPDP);
 
@@ -69,6 +70,7 @@ public class Robot extends TimedRobot {
         MODE=INITIALIZING;
         mLogger.warn("===> ROBOT INIT Starting");
         mAutonSelection = new AutonSelection();
+        mPracticeController = new DriveForwardDoStuffController();
         mOI = new OperatorInput();
         mDrive = new DriveModule();
         mShooter = new FlywheelModule();
@@ -129,11 +131,12 @@ public class Robot extends TimedRobot {
         }
 
         MODE=AUTONOMOUS;
-        mActiveController = mAutonSelection.getSelectedAutonController();
+       // mActiveController = mAutonSelection.getSelectedAutonController();
+        mActiveController = mPracticeController;
         mActiveController.setEnabled(true);
         mRunningModules.clearModules();
-        mRunningModules.addModule(mLimelight);
-        mRunningModules.addModule(mShooter);
+      //  mRunningModules.addModule(mLimelight);
+     //   mRunningModules.addModule(mShooter);
         mRunningModules.addModule(mIntake);
         mRunningModules.addModule(mDrive);
         mRunningModules.modeInit(AUTONOMOUS);
